@@ -13,8 +13,20 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | Página | Quem acessa | O que faz |
 |---|---|---|
 | `index.html` | todos | Login com usuário (ou e-mail) e senha |
-| `painel.html` | xerifes e Alto Comando | Registro dos oficiais, exonerações, histórico, CSV |
-| `contas.html` | só Alto Comando | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
+| `painel.html` | Xerife, Sub-Xerife e Adm | Registro dos oficiais, exonerações, histórico, CSV |
+| `contas.html` | Xerife, Sub-Xerife e Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
+
+## Cargos
+
+| Cargo | Quem é | Acesso |
+|---|---|---|
+| **Xerife** | Sheriff da Cavalaria | todas as páginas |
+| **Sub-Xerife** | Sub-Sheriff | todas as páginas |
+| **Adm** | administra o site (não é cargo do RP) | todas as páginas |
+
+Por enquanto só esses três cargos têm conta, e todos têm **acesso total**: painel, página Contas e reverter exonerações. O cargo é escolhido em **Contas** e aparece na barra de cima do site.
+
+Por baixo, cada cargo vira um nível de acesso na tabela `cavalaria_membros`: `admin` = acesso total, `xerife` = só o painel. O nível `xerife` continua existindo para quando outros cargos (ex.: Oficial-Sênior) ganharem acesso limitado. Para isso, basta mudar o mapa `CARGOS` em `netlify/functions/contas.mjs` e a lista em `site/comum.js`. Contas antigas sem cargo aparecem como **Adm** (acesso total) ou **Acesso limitado**.
 
 ## Configurar o Netlify (uma vez)
 
@@ -31,16 +43,16 @@ Sem essas variáveis o painel continua funcionando, mas mostra e-mails no lugar 
 
 ## Configurar o Supabase (uma vez)
 
-1. Em **Authentication → Sign In / Providers → Email**, **desative novas inscrições públicas** ("Allow new users to sign up"). Só o Alto Comando cria contas, pela página Contas.
+1. Em **Authentication → Sign In / Providers → Email**, **desative novas inscrições públicas** ("Allow new users to sign up"). Só quem tem acesso à página Contas cria contas.
 2. O banco já está instalado. O `supabase_instalacao.sql` só é necessário para montar um projeto Supabase do zero (veja abaixo).
 
 ## Primeiro acesso depois desta versão
 
-1. O Alto Comando entra com a conta que já existe (a antiga conta compartilhada, `lukasbr881@gmail.com`).
-2. Em **Contas**, coloca o próprio nome no RP e clica em **Salvar**.
-3. Cria as contas dos demais. Para cada uma: nome no RP, usuário (ex.: `snyx`), cargo e senha temporária (botão **Gerar**). O painel mostra o usuário e a senha **uma única vez**: passe ao oficial em particular.
+1. Entre com a conta que já existe (a antiga conta compartilhada, `lukasbr881@gmail.com`).
+2. Em **Contas**, coloque o próprio nome no RP, escolha o cargo e clique em **Salvar**.
+3. Crie as contas dos demais. Para cada uma: nome no RP, usuário (ex.: `snyx`), cargo e senha temporária (botão **Gerar**). O painel mostra o usuário e a senha **uma única vez**: passe ao oficial em particular.
 4. No primeiro acesso, o oficial é obrigado a definir uma senha pessoal.
-5. **Troque a senha da antiga conta compartilhada** (botão **Trocar senha** no painel). Enquanto ela não mudar, quem conhece a senha antiga ainda entra como Alto Comando.
+5. **Troque a senha da antiga conta compartilhada** (botão **Trocar senha** no painel). Enquanto ela não mudar, quem conhece a senha antiga ainda entra nessa conta.
 
 O histórico anterior a esta versão continua mostrando a conta compartilhada, porque não há como saber quem fez cada alteração antiga.
 
@@ -54,14 +66,14 @@ O `config.js` define `loginDomain: "cavalaria.oeste"`. Quem digita só `snyx` en
 - **Ativo** ou **Inativo** → avaliação de comparecimento.
 - **Exonerar** → exoneração proposta, **ainda não executada no jogo**. O botão `Confirmar exoneração` fica disponível.
 - Após executar a exoneração **dentro do RP**, o responsável confirma no painel. O banco registra data, horário e quem confirmou; a pessoa passa a aparecer em vermelho e carimbada **EXONERADO**. Nunca ocorre exclusão.
-- Registros confirmados tornam-se somente leitura. Se houver erro de avaliação, só o Alto Comando vê `Reverter exoneração`, que exige justificativa, volta o oficial para `Ativo` e fica no histórico.
+- Registros confirmados tornam-se somente leitura. Se houver erro de avaliação, só quem tem acesso total vê `Reverter exoneração`, que exige justificativa, volta o oficial para `Ativo` e fica no histórico.
 
 ## Proteção e limitações
 
 - Só contas com cargo (tabela `cavalaria_membros`) acessam os registros (RLS). Tirar o acesso em **Contas** remove o cargo e bloqueia a conta no Supabase: ela perde o acesso na hora e não consegue entrar de novo. O histórico dela é preservado.
 - O nome do oficial fica em `app_metadata` da conta, que só a chave secreta altera. O próprio usuário não consegue trocar o nome que aparece no histórico.
-- O Alto Comando não consegue tirar o próprio acesso (evita ficar sem nenhum administrador).
-- `admin` e `xerife` editam os registros da mesma forma; só `admin` reverte exonerações e gerencia contas.
+- Ninguém consegue tirar o próprio acesso total (evita o site ficar sem nenhum administrador).
+- Os níveis `admin` e `xerife` editam os registros da mesma forma; só `admin` reverte exonerações e gerencia contas.
 - Atualizações concorrentes no mesmo campo prevalecem pela última gravação. Combinem quem avalia cada jurisdição.
 - Lemoyne e "Sem jurisdição" seguem como destino possível: os contingentes fechados podem reabrir.
 - Mantenha o projeto Supabase ativo e faça backups; planos grátis podem ter pausas/limites.
@@ -69,7 +81,7 @@ O `config.js` define `loginDomain: "cavalaria.oeste"`. Quem digita só `snyx` en
 ## Montar do zero (outro projeto Supabase)
 
 1. Crie o projeto em https://supabase.com/dashboard e execute `supabase_instalacao.sql` no **SQL Editor**. Isso cria tabelas, regras, histórico e os 109 nomes.
-2. Crie a primeira conta em **Authentication → Users → Add user** (marque **Auto Confirm User**) e dê a ela o cargo de Alto Comando:
+2. Crie a primeira conta em **Authentication → Users → Add user** (marque **Auto Confirm User**) e dê a ela acesso total:
 
 ```sql
 insert into public.cavalaria_membros(user_id, role)
@@ -83,7 +95,7 @@ select id, 'admin' from auth.users where email = 'EMAIL_DA_CONTA';
 1. Senha errada no login: acesso negado.
 2. Conta sem cargo: "Esta conta não está autorizada".
 3. Abrir `painel.html` sem estar logado: volta para o login.
-4. Alto Comando: criar uma conta em **Contas** e entrar com ela em outro navegador. Deve pedir a senha pessoal.
-5. Xerife: não vê o botão **Contas**, e `contas.html` o devolve ao painel.
+4. Criar uma conta em **Contas** (ex.: Sub-Xerife) e entrar com ela em outro navegador. Deve pedir a senha pessoal.
+5. A conta nova vê o botão **Contas** e o cargo certo na barra de cima.
 6. Mudar uma situação no navegador A e ver no B. O histórico mostra o **nome** de quem alterou.
 7. Tirar o acesso da conta de teste: ela não consegue mais entrar.

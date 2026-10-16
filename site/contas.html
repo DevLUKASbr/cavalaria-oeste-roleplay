@@ -22,7 +22,7 @@
 
     <div id="private" class="hide">
       <div class="sessionbar">
-        <div><strong id="userLabel"></strong> · <span class="pill">Alto Comando</span></div>
+        <div><strong id="userLabel"></strong> · <span class="pill" id="roleLabel"></span></div>
         <div class="session-actions">
           <a class="btn secondary" href="painel.html">Voltar ao registro</a>
           <button class="btn secondary" id="logout">Sair da sessão</button>
@@ -34,8 +34,8 @@
         <form id="createForm" class="account-form">
           <label class="field"><span>Nome no RP</span><input id="newName" maxlength="80" required placeholder="Ex.: Bahia De La Plata"></label>
           <label class="field"><span>Usuário ou e-mail</span><input id="newLogin" autocapitalize="none" spellcheck="false" required placeholder="Ex.: bahia"></label>
-          <label class="field"><span>Cargo no painel</span>
-            <select id="newRole"><option value="xerife">Xerife</option><option value="admin">Alto Comando</option></select>
+          <label class="field"><span>Cargo</span>
+            <select id="newCargo"></select>
           </label>
           <label class="field"><span>Senha temporária</span>
             <span class="password-row"><input id="newPassword" minlength="8" required autocomplete="off"><button class="btn secondary" type="button" id="generate">Gerar</button></span>

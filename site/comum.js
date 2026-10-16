@@ -41,6 +41,11 @@
   // Nome exibido: definido pelo Alto Comando em app_metadata (o próprio usuário não consegue alterar).
   const displayName = user => user?.app_metadata?.nome || user?.email || '';
 
+  // Cargo exibido (Xerife, Sub-Xerife, Adm). Contas antigas sem cargo aparecem pelo nível de acesso.
+  const CARGOS = ['Xerife', 'Sub-Xerife', 'Adm'];
+  const cargoLabel = (user, membership) =>
+    user?.app_metadata?.cargo || (membership?.role === 'admin' ? 'Adm' : 'Acesso limitado');
+
   async function fetchMembership(userId) {
     const { data, error } = await db.from('cavalaria_membros').select('role').eq('user_id', userId).maybeSingle();
     if (error) throw error;
@@ -105,6 +110,6 @@
   window.Cavalaria = {
     $, esc, formatDateTime, setHidden, message,
     config, isConfigured, db,
-    loginEmail, displayName, fetchMembership, requireMember, api, signOut,
+    loginEmail, displayName, CARGOS, cargoLabel, fetchMembership, requireMember, api, signOut,
   };
 })();

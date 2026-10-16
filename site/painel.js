@@ -4,7 +4,7 @@
  */
 (async () => {
   'use strict';
-  const { $, esc, formatDateTime, setHidden, message, db, displayName, requireMember, api, signOut } = window.Cavalaria;
+  const { $, esc, formatDateTime, setHidden, message, db, displayName, cargoLabel, requireMember, api, signOut } = window.Cavalaria;
 
   const access = await requireMember();
   if (!access) return;
@@ -16,7 +16,7 @@
 
   const state = {
     session: access.session,
-    membership: access.membership, // { role }
+    membership: access.membership, // { role }: 'admin' = acesso total, 'xerife' = só o painel
     names: new Map(),              // e-mail da conta → nome do oficial
     officers: [],
     channel: null,
@@ -286,7 +286,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Troca de senha (obrigatória no primeiro acesso de contas criadas pelo Alto Comando)
+  // Troca de senha (obrigatória no primeiro acesso de contas criadas na página Contas)
   // ---------------------------------------------------------------------------
 
   function openPasswordForm(firstAccess = false) {
@@ -367,7 +367,7 @@
 
   const user = state.session.user;
   $('userLabel').textContent = displayName(user);
-  $('roleLabel').textContent = isAdmin() ? 'Alto Comando' : 'Xerife autorizado';
+  $('roleLabel').textContent = cargoLabel(user, state.membership);
   setHidden('accountsLink', !isAdmin());
   setHidden('private', false);
   if (user.user_metadata?.trocar_senha) {
