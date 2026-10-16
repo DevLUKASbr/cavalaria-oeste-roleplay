@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Entrar · Cavalaria | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="login-page">
+  <main class="paper login-card">
+    <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
+    <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
+    <h1>Cavalaria</h1>
+    <div class="subtitle">Registro Geral · Alto Comando</div>
+    <div class="rule">✦</div>
+
+    <div id="message" class="system-msg hide" role="status"></div>
+
+    <form id="loginForm" class="hide">
+      <label class="field">
+        <span>Usuário ou e-mail</span>
+        <input id="loginUser" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+      </label>
+      <label class="field">
+        <span>Senha</span>
+        <input id="password" type="password" autocomplete="current-password" required minlength="6">
+      </label>
+      <button class="btn" type="submit">Entrar no registro</button>
+    </form>
+
+    <p class="footnote">Cada oficial tem a própria conta, criada pelo Alto Comando.<br>Não compartilhe sua senha: as alterações ficam registradas no seu nome.</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="comum.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

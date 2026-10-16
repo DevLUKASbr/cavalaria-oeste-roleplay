@@ -1,0 +1,12 @@
+# Netlify: publica só a pasta site/ (os SQLs e o LEIA-ME ficam fora do ar)
+# e a Function de contas em netlify/functions/. Não há etapa de build.
+[build]
+  publish = "site"
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
