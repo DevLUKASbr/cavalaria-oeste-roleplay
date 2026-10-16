@@ -131,9 +131,9 @@ test('só exibe o formulário depois de verificar a sessão', async () => {
   assert.equal(page.calls.focus, 'loginUser');
 });
 
-test('sessão autorizada redireciona diretamente ao painel', async () => {
+test('sessão autorizada redireciona diretamente ao dashboard', async () => {
   const page = await openLogin({ session: { user: { id: 'existing-official' } } });
-  assert.deepEqual(page.calls.redirects, ['painel.html']);
+  assert.deepEqual(page.calls.redirects, ['dashboard.html']);
   assert.deepEqual(page.calls.membership, ['existing-official']);
   assert.match(page.element('loginForm').className, /hide/);
 });
@@ -151,7 +151,7 @@ test('login individual normaliza o usuário e verifica a associação antes do r
   assert.equal(page.calls.credentials[0].email, 'oficial@cavalaria.oeste');
   assert.equal(page.calls.credentials[0].password, 'individual-secret');
   assert.deepEqual(page.calls.membership, ['official-123']);
-  assert.deepEqual(page.calls.redirects, ['painel.html']);
+  assert.deepEqual(page.calls.redirects, ['dashboard.html']);
   assert.equal(page.element('password').value, '');
   assert.equal(page.calls.prevented, true);
 });
@@ -223,16 +223,16 @@ test('restrição administrativa e evento de encerramento de sessão continuam a
   assert.deepEqual(page.calls.redirects, ['index.html?motivo=saiu']);
 });
 
-test('Membro entra em Treinamentos mesmo sem associação ao registro', async () => {
+test('Membro entra no dashboard mesmo sem associação ao registro', async () => {
   const page = await openLogin({ cargo: 'Membro', noMembership: true });
   await page.submit();
-  assert.deepEqual(page.calls.redirects, ['treinamentos.html']);
+  assert.deepEqual(page.calls.redirects, ['dashboard.html']);
   assert.equal(page.calls.signOut, 0);
 });
 
-test('sessão existente de Membro abre Treinamentos e mantém o formulário oculto', async () => {
+test('sessão existente de Membro abre o dashboard e mantém o formulário oculto', async () => {
   const page = await openLogin({ session: { user: { id: 'member-123' } }, cargo: 'Membro', noMembership: true });
-  assert.deepEqual(page.calls.redirects, ['treinamentos.html']);
+  assert.deepEqual(page.calls.redirects, ['dashboard.html']);
   assert.match(page.element('loginForm').className, /hide/);
 });
 

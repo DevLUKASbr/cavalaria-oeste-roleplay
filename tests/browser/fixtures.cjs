@@ -1,0 +1,96 @@
+// Fixtures fictícias. Nenhuma conta, credencial ou chamada real ao Supabase é usada.
+function supabaseMock() {
+  const settings = window.__testSettings || {};
+  const user = { id: 'test-official', email: 'oficial@example.test', app_metadata: { nome: 'Morgan West', cargo: settings.cargo ?? 'Xerife' }, user_metadata: { trocar_senha: !!settings.firstAccess } };
+  let listeners = [];
+  const state = window.__mock = {
+    calls: [], fail: !!settings.fail, officers: settings.empty ? [] : [
+      { id: 'a', ordem: 1, nome: 'Arthur Teste', origem: 'New Hanover', status: 'Ativo', destino: 'A definir', observacao: '', executed_at: null },
+      { id: 'b', ordem: 2, nome: 'Bonnie Teste', origem: 'West Elizabeth', status: 'Exonerar', destino: 'West Elizabeth', observacao: 'Revisão registrada', executed_at: null },
+      { id: 'c', ordem: 3, nome: 'Charles Teste', origem: 'Lemoyne', status: 'Exonerar', destino: 'Lemoyne', observacao: '', executed_at: '2026-10-15T15:00:00Z', executed_by_email: 'comando@example.test' },
+      { id: 'd', ordem: 4, nome: 'Diana Teste', origem: 'New Hanover', status: 'Pendente', destino: 'A definir', observacao: '', executed_at: null },
+      { id: 'e', ordem: 5, nome: 'Elias Teste', origem: 'Sem jurisdição', status: 'Inativo', destino: 'A definir', observacao: '', executed_at: null },
+    ],
+    audit: settings.empty ? [] : [{ oficial_nome: 'Arthur Teste', alterado_em: '2026-10-16T14:00:00Z', autor_email: 'comando@example.test', antes: { situacao: 'Pendente' }, depois: { situacao: 'Ativo' } }],
+  };
+  function builder(table) {
+    let patch = null, id = null, resultFields = null;
+    const query = {
+      select(fields) { resultFields = fields; return query; },
+      order() { return query; },
+      limit() { return query; },
+      eq(field, value) { if (field === 'id') id = value; return query; },
+      is() { return query; },
+      update(value) { patch = value; return query; },
+      maybeSingle() { return execute(true); },
+      then(resolve, reject) { return execute(false).then(resolve, reject); },
+    };
+    async function execute(single) {
+      state.calls.push({ table, patch, id, fields: resultFields });
+      if (settings.delay) await new Promise(resolve => setTimeout(resolve, settings.delay));
+      if (table === 'cavalaria_membros') return { data: settings.cargo === 'Membro' || settings.noRole ? null : { role: settings.role || 'admin' }, error: null };
+      if (state.fail || (table === 'cavalaria_auditoria' && settings.auditFail)) return { data: null, error: { message: 'Fixture indisponível' } };
+      if (patch) {
+        const officer = state.officers.find(row => row.id === id && !row.executed_at);
+        if (!officer) return { data: null, error: { message: 'Bloqueado' } };
+        Object.assign(officer, patch);
+        return { data: { id }, error: null };
+      }
+      return { data: table === 'cavalaria_oficiais' ? structuredClone(state.officers) : structuredClone(state.audit), error: null };
+    }
+    return query;
+  }
+  window.supabase = { createClient: () => ({
+    auth: {
+      async getSession() { return { data: { session: settings.noSession || sessionStorage.getItem('test-signed-out') ? null : { user, access_token: 'fixture-session' } } }; },
+      async getUser() { return { data: { user }, error: null }; },
+      async signInWithPassword() { sessionStorage.removeItem('test-signed-out'); settings.noSession = false; return { error: null }; },
+      async signOut() { sessionStorage.setItem('test-signed-out', 'true'); listeners.forEach(handler => handler('SIGNED_OUT')); return { error: null }; },
+      onAuthStateChange(handler) { listeners.push(handler); return { data: { subscription: { unsubscribe() {} } } }; },
+      async updateUser() { state.calls.push({ type: 'password' }); return { error: null }; },
+    },
+    from: builder,
+    async rpc(name, payload) {
+      state.calls.push({ rpc: name, payload });
+      const officer = state.officers.find(row => row.id === payload.p_oficial);
+      if (name === 'confirmar_exoneracao') officer.executed_at = '2026-10-16T15:00:00Z';
+      if (name === 'reverter_exoneracao') { officer.executed_at = null; officer.status = 'Ativo'; }
+      return { data: true, error: null };
+    },
+    channel() { const channel = { on() { return channel; }, subscribe(callback) { callback?.('SUBSCRIBED'); return channel; } }; return channel; },
+  }) };
+}
+
+async function prepare(page, settings = {}) {
+  const calls = [];
+  let topics = settings.topics || [];
+  let records = [];
+  await page.addInitScript(value => { window.__testSettings = value; }, settings);
+  await page.route('**/*', async route => {
+    const url = new URL(route.request().url());
+    if (url.hostname === 'cdn.jsdelivr.net') return route.fulfill({ contentType: 'text/javascript', body: `(${supabaseMock.toString()})();` });
+    if (url.hostname === 'fonts.googleapis.com') return route.fulfill({ contentType: 'text/css', body: '' });
+    if (!['127.0.0.1', 'localhost'].includes(url.hostname)) return route.abort();
+    if (url.pathname.startsWith('/api/')) {
+      const request = route.request();
+      const payload = request.method() === 'POST' ? request.postDataJSON() : null;
+      calls.push({ path: url.pathname, payload, authenticated: request.headers().authorization === 'Bearer fixture-session' });
+      if (url.pathname === '/api/contas') return route.fulfill({ json: { contas: [{ id: 'account-test', nome: 'Morgan West', email: 'comando@example.test', cargo: 'Xerife', ultimo_acesso: '2026-10-16T14:00:00Z' }] } });
+      if (url.pathname === '/api/treinamentos') {
+        if (payload?.acao === 'criar') topics.push({ ...payload, id: 'fixture-topic', criado_em: '2026-10-16T14:00:00Z', autor: { nome: 'Morgan West' } });
+        if (payload?.acao === 'editar') topics = topics.map(topic => topic.id === payload.id ? { ...topic, ...payload } : topic);
+        if (payload?.acao === 'excluir') topics = topics.filter(topic => topic.id !== payload.id);
+        return route.fulfill({ json: { topicos: topics } });
+      }
+      if (url.pathname === '/api/recrutamentos') {
+        if (payload?.acao === 'criar') records.push({ ...payload, id: 'fixture-recruitment', criado_em: '2026-10-16T14:00:00Z', autor: { nome: 'Morgan West' } });
+        if (payload?.acao === 'editar') records = records.map(record => record.id === payload.id ? { ...record, ...payload } : record);
+        if (payload?.acao === 'excluir') records = records.filter(record => record.id !== payload.id);
+        return route.fulfill({ json: { fichas: records } });
+      }
+    }
+    return route.continue();
+  });
+  return { calls };
+}
+module.exports = { prepare };

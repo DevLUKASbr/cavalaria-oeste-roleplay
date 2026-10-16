@@ -2,7 +2,7 @@
 
 Painel do Alto Comando para revista de efetivo, avaliação de atividade e controle de exonerações.
 
-- **Site** (pasta `site/`): login, registro, treinamentos, recrutamento, investigações, ações e contas. HTML/JS puro, sem build.
+- **Site** (pasta `site/`): login, dashboard modular, registros, treinamentos, recrutamento, investigações, ações e contas. HTML/JS puro, sem build.
 - **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage para tópicos de treinamento e fichas de recrutamento).
 - **Netlify**: hospeda o site e roda as Functions `contas`, `treinamentos` e `recrutamentos` (rotas `/api/...`), que usam a chave secreta do Supabase guardada só no Netlify.
 
@@ -13,7 +13,8 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | Página | Quem acessa | O que faz |
 |---|---|---|
 | `index.html` | todos | Login com usuário (ou e-mail) e senha |
-| `painel.html` (Registro) | Xerife, Sub-Xerife, Adm | Registro dos oficiais, exonerações, histórico, CSV |
+| `dashboard.html` (Início) | contas com algum módulo autorizado | Visão inicial, indicadores reais permitidos, distribuição por jurisdição, auditoria e atalhos |
+| `painel.html` (Registros) | Xerife, Sub-Xerife, Adm e contas antigas com nível `xerife` | Registro dos oficiais, exonerações, histórico, CSV |
 | `treinamentos.html` | Xerife, Sub-Xerife, Adm (criam e editam) · Membro (só lê) | Tópicos de treinamento com título, subtítulo, descrição e vídeos |
 | `recrutamento.html` | Xerife, Sub-Xerife, Adm | Roteiro do recrutamento e fichas dos candidatos |
 | `investigacoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
@@ -21,6 +22,20 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
 
 O menu de cada pessoa mostra só as páginas que o cargo dela permite. Quem abre uma página sem permissão é levado para a primeira página permitida.
+
+Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML existentes, com sidebar e topbar compartilhadas; a sessão individual continua persistida pelo Supabase. O Dashboard de quem não pode ver Registros não consulta efetivo nem auditoria. Premiações e Avisos são apenas indicações de etapas futuras, sem novas permissões.
+
+O diagnóstico, os testes e as pendências da Fase 1 estão em [`STATUS.md`](STATUS.md) e [`docs/FASE1_DIAGNOSTICO.md`](docs/FASE1_DIAGNOSTICO.md). A implantação segue estática, sem build ou dependências de runtime. Para desenvolver e validar localmente:
+
+```powershell
+npm ci
+npx playwright install chromium
+npm test
+npm run test:e2e
+npm run preview
+```
+
+Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais ao Supabase ou às Functions. Não substituem a homologação com contas reais no preview do Netlify.
 
 ## Cargos
 

@@ -18,7 +18,8 @@
   async function homePage() {
     try {
       const access = await loadAccess();
-      return access ? firstPageOf(access) : null;
+      // Só muda o destino visual; a conta ainda precisa ter uma página autorizada.
+      return access && firstPageOf(access) ? { href: 'dashboard.html' } : null;
     } catch {
       return null;
     }
