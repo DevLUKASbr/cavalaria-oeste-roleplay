@@ -32,8 +32,11 @@
   function renderVideo(url) {
     const id = youtubeId(url);
     if (id && /^[\w-]{6,20}$/.test(id)) {
+      // O YouTube recusa o player (erro 153) sem saber o site de origem; o netlify.toml usa
+      // Referrer-Policy "same-origin", então o iframe libera só o domínio (sem o caminho da página).
       return `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${esc(id)}" title="Vídeo do treinamento"
-        loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
+        loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
     }
     let host = url;
     try { host = new URL(url).hostname.replace(/^www\./, ''); } catch { /* mostra o link inteiro */ }
