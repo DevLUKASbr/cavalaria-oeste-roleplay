@@ -17,7 +17,8 @@ body.login-page {
 }
 
 .login-page::before {
-  background: url('assets/login-scenery.webp') center center / cover no-repeat;
+  /* Mantém o chapéu inteiro quando o cover recorta a imagem em telas largas. */
+  background: url('assets/login-scenery.webp') center top / cover no-repeat;
 }
 
 .login-page::after {
@@ -238,7 +239,7 @@ body.login-page {
 
 @media (max-width: 720px) {
   body.login-page { padding: 36px 14px; }
-  .login-page::before { background-position: 38% center; }
+  .login-page::before { background-position: 38% top; }
   .login-page::after { background: #21170d35; }
   .login-page .login-card { max-width: 440px; padding: 40px 30px 34px; }
   .login-page .eyebrow { font-size: 10px; letter-spacing: 2.6px; }
