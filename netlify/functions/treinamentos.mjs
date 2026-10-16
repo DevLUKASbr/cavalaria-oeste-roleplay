@@ -6,87 +6,14 @@
  *   POST { acao: 'editar',  id, titulo, subtitulo, descricao, videos[] }  ('treinamentos.editar')
  *   POST { acao: 'excluir', id }                                          ('treinamentos.editar')
  *
- * Sem SQL: cada tópico é um arquivo JSON no Supabase Storage, bucket privado "cavalaria",
- * pasta "treinamentos/". O bucket é criado automaticamente na primeira gravação.
+ * Sem SQL: cada tópico é um arquivo JSON no Supabase Storage, pasta "treinamentos/"
+ * (ver netlify/lib/armazenamento.mjs).
  */
 import { HttpError, json, respond, supabase, authenticate } from '../lib/acesso.mjs';
+import { storage, ID_RE, newId } from '../lib/armazenamento.mjs';
 
-const BUCKET = 'cavalaria';
 const FOLDER = 'treinamentos';
 const MAX_VIDEOS = 10;
-const ID_RE = /^[a-z0-9-]{6,40}$/;
-
-// ---------------------------------------------------------------------------
-// Supabase Storage
-// ---------------------------------------------------------------------------
-
-function storage(sb) {
-  const objectPath = id => `/storage/v1/object/${BUCKET}/${FOLDER}/${id}.json`;
-  const isMissingBucket = async response =>
-    !response.ok && /bucket not found/i.test(await response.clone().text());
-
-  async function failure(response) {
-    const data = await response.json().catch(() => ({}));
-    return new HttpError(502, `Supabase Storage: ${data.message || data.error || response.statusText}`);
-  }
-
-  async function createBucket() {
-    const response = await sb.call('/storage/v1/bucket', {
-      method: 'POST',
-      body: { id: BUCKET, name: BUCKET, public: false },
-      raw: true,
-    });
-    if (response.ok) return;
-    // 409/400 "already exists" = outra chamada criou ao mesmo tempo; tudo bem.
-    const detail = await response.text();
-    if (!/already exists|duplicate/i.test(detail)) throw new HttpError(502, `Supabase Storage: ${detail.slice(0, 200)}`);
-  }
-
-  return {
-    async list() {
-      const response = await sb.call(`/storage/v1/object/list/${BUCKET}`, {
-        method: 'POST',
-        body: { prefix: FOLDER, limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } },
-        raw: true,
-      });
-      if (await isMissingBucket(response)) return []; // nada gravado ainda
-      if (!response.ok) throw await failure(response);
-      const files = await response.json();
-      const ids = files.map(f => f.name).filter(n => n.endsWith('.json')).map(n => n.slice(0, -5)).filter(id => ID_RE.test(id));
-      return Promise.all(ids.map(id => this.get(id)));
-    },
-
-    async get(id) {
-      const response = await sb.call(objectPath(id), { raw: true });
-      if (!response.ok) return null;
-      return response.json().catch(() => null);
-    },
-
-    async put(topic) {
-      const save = () => sb.call(objectPath(topic.id), {
-        method: 'POST',
-        body: JSON.stringify(topic),
-        headers: { 'x-upsert': 'true', 'cache-control': 'no-cache' },
-        raw: true,
-      });
-      let response = await save();
-      if (await isMissingBucket(response)) {
-        await createBucket();
-        response = await save();
-      }
-      if (!response.ok) throw await failure(response);
-    },
-
-    async remove(id) {
-      const response = await sb.call(`/storage/v1/object/${BUCKET}`, {
-        method: 'DELETE',
-        body: { prefixes: [`${FOLDER}/${id}.json`] },
-        raw: true,
-      });
-      if (!response.ok) throw await failure(response);
-    },
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Validação
@@ -131,8 +58,6 @@ function cleanId(id) {
   return value;
 }
 
-const newId = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
@@ -143,7 +68,7 @@ export default req => respond(async () => {
   const sb = supabase();
   const caller = await authenticate(req, sb);
   if (!caller.can('treinamentos')) throw new HttpError(403, 'Sem permissão para ver os treinamentos.');
-  const store = storage(sb);
+  const store = storage(sb, FOLDER);
 
   if (req.method === 'GET') {
     const topics = (await store.list()).filter(Boolean);

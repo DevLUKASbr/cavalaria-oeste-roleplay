@@ -3,8 +3,8 @@
 Painel do Alto Comando para revista de efetivo, avaliação de atividade e controle de exonerações.
 
 - **Site** (pasta `site/`): login, registro, treinamentos, recrutamento, investigações, ações e contas. HTML/JS puro, sem build.
-- **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage para os tópicos de treinamento).
-- **Netlify**: hospeda o site e roda as Functions `contas` e `treinamentos` (rotas `/api/contas` e `/api/treinamentos`), que usam a chave secreta do Supabase guardada só no Netlify.
+- **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage para tópicos de treinamento e fichas de recrutamento).
+- **Netlify**: hospeda o site e roda as Functions `contas`, `treinamentos` e `recrutamentos` (rotas `/api/...`), que usam a chave secreta do Supabase guardada só no Netlify.
 
 Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **Ninguém precisa abrir o SQL Editor**: contas, nomes, cargos, senhas e tópicos são gerenciados pelo próprio site.
 
@@ -15,7 +15,7 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | `index.html` | todos | Login com usuário (ou e-mail) e senha |
 | `painel.html` (Registro) | Xerife, Sub-Xerife, Adm | Registro dos oficiais, exonerações, histórico, CSV |
 | `treinamentos.html` | Xerife, Sub-Xerife, Adm (criam e editam) · Membro (só lê) | Tópicos de treinamento com título, subtítulo, descrição e vídeos |
-| `recrutamento.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `recrutamento.html` | Xerife, Sub-Xerife, Adm | Roteiro do recrutamento e fichas dos candidatos |
 | `investigacoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
 | `acoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
 | `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
@@ -42,7 +42,14 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 - Xerife, Sub-Xerife e Adm usam **Novo tópico**: título (obrigatório), subtítulo (opcional), descrição e até 10 links de vídeo.
 - Links do YouTube viram player na própria página. Outros links (Medal, Drive, Twitch…) viram um botão "Assistir vídeo".
 - Cada tópico mostra quem publicou e quem editou por último. Excluir pede confirmação e não tem volta.
-- Os tópicos ficam no **Supabase Storage**, bucket privado `cavalaria`, pasta `treinamentos/` (um arquivo JSON por tópico). O bucket é criado sozinho na primeira publicação. Só a Function lê e grava lá, com a chave secreta.
+- Os tópicos ficam no **Supabase Storage**, bucket privado `cavalaria`, pasta `treinamentos/` (um arquivo JSON por tópico; ver `netlify/lib/armazenamento.mjs`). O bucket é criado sozinho na primeira gravação. Só as Functions leem e gravam lá, com a chave secreta.
+
+## Recrutamento
+
+- **Roteiro:** as 7 etapas do recrutamento (anúncio, dados do candidato, conhecimento intrínseco, teste físico, questionário psicológico, os Quatro Pilares e contratação). Os botões **Copiar comando** copiam o `/anuncio` pronto para colar no jogo.
+- **Fichas de recrutamento:** cada ficha é um recrutamento (data, responsável, auxiliares) com um ou mais candidatos. Para cada candidato: dados pessoais, disponibilidade, qualidades e defeitos, as 3 perguntas pessoais, os testes de caça e natação, as 8 perguntas do questionário, nota (0 a 10), resultado (Pendente, Aprovado, Reprovado) e observações.
+- Fichas podem ser editadas e excluídas por Xerife, Sub-Xerife e Adm. Ficam no Supabase Storage, pasta `recrutamentos/`, como os treinamentos.
+- **Mudar o roteiro:** o texto e as perguntas ficam no início de `site/recrutamento.js`. As respostas são guardadas pela ordem das perguntas. Para mudar a **quantidade** de perguntas, ajuste também `PERSONAL_QUESTIONS` / `PSYCH_QUESTIONS` em `netlify/functions/recrutamentos.mjs`.
 
 ## Configurar o Netlify (uma vez)
 

@@ -7,7 +7,7 @@
   <link rel="icon" href="logo-oeste.png">
   <link rel="stylesheet" href="estilo.css">
 </head>
-<body data-pagina="recrutamento">
+<body>
 <main class="wrap">
   <article class="paper">
     <header class="masthead">
@@ -22,9 +22,37 @@
     <div id="shell"></div>
 
     <div id="private" class="hide">
-      <section class="construction">
-        <h2>Em construção</h2>
-        <p>A página de Recrutamento ainda está sendo definida pelo Alto Comando. Em breve, o conteúdo estará disponível aqui.</p>
+      <div class="tabs no-print" role="tablist">
+        <button class="tab active" role="tab" data-tab="roteiro" aria-selected="true">Roteiro</button>
+        <button class="tab" role="tab" data-tab="fichas" aria-selected="false">Fichas de recrutamento</button>
+      </div>
+
+      <section id="tab-roteiro" class="tab-panel"></section>
+
+      <section id="tab-fichas" class="tab-panel hide">
+        <div class="topic-toolbar no-print">
+          <input id="search" type="search" placeholder="Buscar por candidato ou responsável…" aria-label="Buscar ficha">
+          <button class="btn hide" id="newRecord">Nova ficha</button>
+        </div>
+
+        <section id="editor" class="panel-box hide">
+          <h2 id="editorTitle">Nova ficha de recrutamento</h2>
+          <form id="recordForm" class="topic-form">
+            <div class="record-header">
+              <label class="field"><span>📅 Data *</span><input id="recData" type="date" required></label>
+              <label class="field"><span>👮 Responsável *</span><input id="recResponsavel" maxlength="80" required></label>
+              <label class="field"><span>👮 Auxiliares</span><input id="recAuxiliares" maxlength="300" placeholder="Nomes separados por vírgula"></label>
+            </div>
+            <div id="candidates"></div>
+            <button class="btn secondary" type="button" id="addCandidate">+ Adicionar candidato</button>
+            <div class="form-actions">
+              <button class="btn" type="submit" id="saveRecord">Salvar ficha</button>
+              <button class="btn secondary" type="button" id="cancelRecord">Cancelar</button>
+            </div>
+          </form>
+        </section>
+
+        <div id="records"></div>
       </section>
     </div>
 
@@ -38,6 +66,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="comum.js"></script>
-<script src="construcao.js"></script>
+<script src="recrutamento.js"></script>
 </body>
 </html>
