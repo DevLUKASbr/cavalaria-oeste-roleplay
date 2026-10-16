@@ -1,58 +1,89 @@
 # Registro Geral da Cavalaria — Oeste Roleplay
 
-Aplicação estática colaborativa: Supabase Auth + PostgreSQL + Realtime. **Não está publicada nem conectada até você concluir estes passos.**
+Painel do Alto Comando para revista de efetivo, avaliação de atividade e controle de exonerações.
 
-## Instalar
+- **Site** (pasta `site/`): tela de login, painel do registro e gestão de contas. HTML/JS puro, sem build.
+- **Banco**: Supabase (Postgres com regras RLS + Realtime).
+- **Netlify**: hospeda o site e roda a Function `netlify/functions/contas.mjs` (rota `/api/contas`), que gerencia as contas usando a chave secreta do Supabase guardada só no Netlify.
 
-1. Crie um projeto em https://supabase.com/dashboard.
-2. Em **SQL Editor**, cole e execute todo `supabase_instalacao.sql` em um projeto novo. Ele cria tabelas, regras de acesso, logs, rotina de confirmação de exoneração e importa os **109 nomes**. Não execute em banco com tabelas homônimas preexistentes sem revisar o script.
-3. Em **Authentication → Users → Add user → Create new user**, crie **UMA conta compartilhada**, com e-mail válido sob controle do Alto Comando e uma senha forte definida por você. Marque confirmação automática caso disponível. Os xerifes **não precisarão digitar nem saber o e-mail**: ele será usado internamente pela aplicação. **Não coloque a senha no HTML, SQL nem em `config.js`.** Se possível, desabilite novas inscrições públicas em **Authentication → Providers → Email**.
-4. Autorize essa conta no SQL Editor (substitua pelo e-mail REAL criado e execute):
+Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **No dia a dia ninguém precisa abrir o SQL Editor**: contas, nomes, cargos e senhas são gerenciados na página **Contas** do painel.
 
-```sql
-insert into public.cavalaria_membros(user_id,role)
-select id, 'admin' from auth.users where email='CONTA_COMPARTILHADA@EXEMPLO.COM'
-on conflict(user_id) do update set role=excluded.role;
+## Páginas
 
-select m.user_id, m.role from public.cavalaria_membros m
-join auth.users u on u.id=m.user_id
-where u.email='CONTA_COMPARTILHADA@EXEMPLO.COM';
-```
+| Página | Quem acessa | O que faz |
+|---|---|---|
+| `index.html` | todos | Login com usuário (ou e-mail) e senha |
+| `painel.html` | xerifes e Alto Comando | Registro dos oficiais, exonerações, histórico, CSV |
+| `contas.html` | só Alto Comando | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
 
-A segunda consulta precisa retornar **1 linha**; caso contrário, confira o e-mail cadastrado.
-5. Em **Project Settings → API Keys** (ou botão **Connect**), copie **Project URL** e **publishable / anon key**. Preencha as três propriedades em `config.js`: URL, chave pública e `sharedLoginEmail` com o e-mail da conta única. Esse e-mail é apenas identificador público, **não é segredo**. A senha permanece somente na autenticação do Supabase. **NUNCA use `service_role` ou secret key no front-end.**
-6. Publique **index.html, app.js, config.js** na mesma pasta em uma hospedagem estática como Netlify Drop ou Vercel. Não publique o SQL de instalação nem informações sigilosas. A URL definitiva só existirá depois da publicação.
-7. Abra o link em dois navegadores diferentes e informe **somente a senha** nos dois. Teste uma alteração inofensiva de situação no primeiro navegador e confira se aparece no segundo. Todos usam **a mesma identidade técnica** e são indistinguíveis na auditoria; para identificação individual, será preciso evoluir o projeto.
-8. Se a senha vazar, altere-a imediatamente pelo Supabase e encerre/revogue sessões existentes conforme necessário: alterar apenas a senha pode não invalidar sessões já emitidas de imediato. Sem contas individuais, qualquer integrante pode repassar a credencial.
+## Configurar o Netlify (uma vez)
 
-## Nota de segurança importante
+O `netlify.toml` já diz ao Netlify o que publicar (`site/`) e onde está a Function. Falta só:
 
-A tela solicita apenas a senha, mas por trás utiliza **uma conta Supabase com e-mail fixo** definido no arquivo público `config.js`. Isso oferece simplicidade sem abrir acesso anônimo ao banco, aproveitando as políticas RLS já instaladas. O e-mail **não funciona como segredo**; qualquer pessoa pode inspecioná-lo, mas precisa da senha para autenticar. O acesso é compartilhado: não existe identificação confiável do xerife individual que realizou cada alteração.
+1. Em **Project configuration → Environment variables**, criar:
+   - `SUPABASE_URL` = `https://qohigzayevglccdwtlkm.supabase.co`
+   - `SUPABASE_SECRET_KEY` = a chave **secret** (ou a antiga `service_role`) de **Supabase → Project Settings → API Keys**.
+
+   Marque a chave secreta como segredo e deixe-a disponível para **Functions**. **Ela nunca vai para o código nem para o `config.js`.**
+2. Fazer um novo deploy (qualquer push no GitHub já dispara).
+
+Sem essas variáveis o painel continua funcionando, mas mostra e-mails no lugar dos nomes, e a página Contas avisa que a gestão não está configurada.
+
+## Configurar o Supabase (uma vez)
+
+1. Em **Authentication → Sign In / Providers → Email**, **desative novas inscrições públicas** ("Allow new users to sign up"). Só o Alto Comando cria contas, pela página Contas.
+2. O banco já está instalado. O `supabase_instalacao.sql` só é necessário para montar um projeto Supabase do zero (veja abaixo).
+
+## Primeiro acesso depois desta versão
+
+1. O Alto Comando entra com a conta que já existe (a antiga conta compartilhada, `lukasbr881@gmail.com`).
+2. Em **Contas**, coloca o próprio nome no RP e clica em **Salvar**.
+3. Cria as contas dos demais. Para cada uma: nome no RP, usuário (ex.: `snyx`), cargo e senha temporária (botão **Gerar**). O painel mostra o usuário e a senha **uma única vez**: passe ao oficial em particular.
+4. No primeiro acesso, o oficial é obrigado a definir uma senha pessoal.
+5. **Troque a senha da antiga conta compartilhada** (botão **Trocar senha** no painel). Enquanto ela não mudar, quem conhece a senha antiga ainda entra como Alto Comando.
+
+O histórico anterior a esta versão continua mostrando a conta compartilhada, porque não há como saber quem fez cada alteração antiga.
+
+## Usuário ou e-mail
+
+O `config.js` define `loginDomain: "cavalaria.oeste"`. Quem digita só `snyx` entra como `snyx@cavalaria.oeste`, um e-mail que não precisa existir. Contas com e-mail real continuam entrando com o e-mail completo. Como esses e-mails não recebem mensagens, senha esquecida se resolve em **Contas → Nova senha**.
 
 ## Fluxo correto de exoneração
 
 - **Pendente** → revisão não feita.
 - **Ativo** ou **Inativo** → avaliação de comparecimento.
 - **Exonerar** → exoneração proposta, **ainda não executada no jogo**. O botão `Confirmar exoneração` fica disponível.
-- Após executar a exoneração **dentro do RP**, o responsável confirma no painel, após confirmação explícita. Banco registra data, horário e autor; a pessoa passa a aparecer em vermelho e carimbada **EXONERADO**. Nunca ocorre exclusão.
-- Registros confirmados tornam-se somente leitura. Se houver erro de avaliação, somente o usuário com papel `admin` verá o botão `Reverter exoneração`; a ação exige confirmação e justificativa obrigatória, retorna o oficial para `Ativo` e preserva o evento no histórico.
+- Após executar a exoneração **dentro do RP**, o responsável confirma no painel. O banco registra data, horário e quem confirmou; a pessoa passa a aparecer em vermelho e carimbada **EXONERADO**. Nunca ocorre exclusão.
+- Registros confirmados tornam-se somente leitura. Se houver erro de avaliação, só o Alto Comando vê `Reverter exoneração`, que exige justificativa, volta o oficial para `Ativo` e fica no histórico.
 
 ## Proteção e limitações
 
-- Login com senha na interface e e-mail fixo interno; a conta compartilhada explicitamente liberada via `cavalaria_membros` são os únicos com acesso aos registros (RLS). Não existe link público de leitura sem autenticação.
-- `admin` e `xerife` têm **o mesmo direito de editar registros** nesta versão; o cargo é informativo. Pode-se implementar restrições por jurisdição mais tarde.
-- Histórico dos campos editáveis é armazenado no servidor, com data e identificação da conta compartilhada (não da pessoa). Limite de 100 eventos na interface.
-- Sincronização pelo Postgres Changes do Supabase; dependendo de rede/conexão pode haver pequenos atrasos e reconexões.
-- Exoneração executada é bloqueada por trigger, inclusive contra UPDATE normal. Exclusão não é concedida a usuários da aplicação.
-- Como todos editam os registros, atualizações concorrentes no mesmo campo podem prevalecer pela última gravação. Combinem quem avalia cada jurisdição.
-- Se o banco ou credenciais não forem configurados, a página apresenta instrução de configuração; não simula sincronização.
-- Mantenha o projeto Supabase ativo, faça backups e lembre-se de que planos grátis podem ter pausas/limites.
+- Só contas com cargo (tabela `cavalaria_membros`) acessam os registros (RLS). Tirar o acesso em **Contas** remove o cargo e bloqueia a conta no Supabase: ela perde o acesso na hora e não consegue entrar de novo. O histórico dela é preservado.
+- O nome do oficial fica em `app_metadata` da conta, que só a chave secreta altera. O próprio usuário não consegue trocar o nome que aparece no histórico.
+- O Alto Comando não consegue tirar o próprio acesso (evita ficar sem nenhum administrador).
+- `admin` e `xerife` editam os registros da mesma forma; só `admin` reverte exonerações e gerencia contas.
+- Atualizações concorrentes no mesmo campo prevalecem pela última gravação. Combinem quem avalia cada jurisdição.
+- Lemoyne e "Sem jurisdição" seguem como destino possível: os contingentes fechados podem reabrir.
+- Mantenha o projeto Supabase ativo e faça backups; planos grátis podem ter pausas/limites.
+
+## Montar do zero (outro projeto Supabase)
+
+1. Crie o projeto em https://supabase.com/dashboard e execute `supabase_instalacao.sql` no **SQL Editor**. Isso cria tabelas, regras, histórico e os 109 nomes.
+2. Crie a primeira conta em **Authentication → Users → Add user** (marque **Auto Confirm User**) e dê a ela o cargo de Alto Comando:
+
+```sql
+insert into public.cavalaria_membros(user_id, role)
+select id, 'admin' from auth.users where email = 'EMAIL_DA_CONTA';
+```
+
+3. Preencha `site/config.js` com a URL e a chave **publishable** do projeto e configure o Netlify como acima. Daí em diante, tudo pela página Contas.
 
 ## Teste mínimo
 
-1. Abrir a página e digitar senha errada: acesso negado.
-2. Digitar a senha correta da conta autorizada: ver 109 nomes.
-3. Mudar Troy Riley para `Exonerar` no navegador A e verificar no B.
-4. Somente após ação fictícia no RP, clicar `Confirmar exoneração`, conferir carimbo e data.
-5. Para testar uma correção administrativa, entrar com uma conta `admin`, clicar `Reverter exoneração`, confirmar e informar uma justificativa; conferir a reversão e o motivo no histórico.
-6. Abrir histórico, verificar identidade do autor, e exportar CSV.
+1. Senha errada no login: acesso negado.
+2. Conta sem cargo: "Esta conta não está autorizada".
+3. Abrir `painel.html` sem estar logado: volta para o login.
+4. Alto Comando: criar uma conta em **Contas** e entrar com ela em outro navegador. Deve pedir a senha pessoal.
+5. Xerife: não vê o botão **Contas**, e `contas.html` o devolve ao painel.
+6. Mudar uma situação no navegador A e ver no B. O histórico mostra o **nome** de quem alterou.
+7. Tirar o acesso da conta de teste: ela não consegue mais entrar.

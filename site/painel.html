@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cavalaria · Alto Comando | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main class="wrap">
+  <article class="paper">
+    <header class="masthead">
+      <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
+      <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
+      <h1>Registro Geral da Cavalaria</h1>
+      <div class="subtitle">Alto Comando · Oeste Roleplay</div>
+      <div class="rule">✦</div>
+      <p class="intro">Revista de efetivo, avaliação de atividade, controle de exonerações e redistribuição de jurisdições. <strong>Documento reservado ao Alto Comando e aos xerifes credenciados.</strong></p>
+      <div class="stamp">Arquivo oficial · Circulação restrita</div>
+    </header>
+
+    <div id="message" class="system-msg hide" role="status"></div>
+
+    <div id="private" class="hide">
+      <div class="sessionbar no-print">
+        <div><strong id="userLabel"></strong> · <span id="connection">Conectando…</span> <span class="pill" id="roleLabel"></span></div>
+        <div class="session-actions">
+          <a class="btn secondary hide" id="accountsLink" href="contas.html">Contas</a>
+          <button class="btn secondary" id="passwordToggle">Trocar senha</button>
+          <button class="btn secondary" id="logout">Sair da sessão</button>
+        </div>
+      </div>
+
+      <form id="passwordForm" class="password-panel hide no-print">
+        <strong id="passwordTitle">Trocar minha senha</strong>
+        <label class="field"><span>Nova senha</span><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="field"><span>Repita a nova senha</span><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+        <div class="password-actions">
+          <button class="btn" type="submit">Salvar nova senha</button>
+          <button class="btn secondary" type="button" id="passwordCancel">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="toolbar no-print">
+        <input id="search" type="search" placeholder="Buscar oficial pelo nome…" aria-label="Buscar oficial">
+        <select id="filter" aria-label="Filtrar situação">
+          <option value="all">Todas as situações</option>
+          <option value="Pendente">Pendente de análise</option>
+          <option value="Ativo">Ativo</option>
+          <option value="Inativo">Inativo</option>
+          <option value="Exonerar">Exoneração proposta</option>
+          <option value="Exonerado">Exoneração executada</option>
+        </select>
+        <button class="btn" id="csv">Exportar revisão (.CSV)</button>
+        <button class="btn secondary" id="print">Imprimir / PDF</button>
+        <button class="btn secondary" id="historyToggle">Histórico de alterações</button>
+      </div>
+
+      <div id="history" class="history hide"></div>
+
+      <p class="hint no-print">As mudanças são enviadas ao banco de dados e disponibilizadas aos demais autorizados. <b>Exoneração proposta</b> significa que a medida ainda depende de execução dentro do RP. Após executá-la no jogo, use <b>Confirmar exoneração</b>; o registro passa a exibir o carimbo vermelho <b>EXONERADO</b> e continua preservado.</p>
+      <div class="warning">⚑ <b>Norma do Comando:</b> nenhuma exoneração é automática. Confirme apenas depois que ela for executada no servidor. Um registro carimbado é preservado no histórico e fica bloqueado para edição. As jurisdições originais permanecem indicadas para conferência.</div>
+
+      <div id="sections"></div>
+    </div>
+
+    <footer class="footer">
+      <strong>Disciplina · Honra · Hierarquia · Justiça</strong>
+      <div class="signatures"><div>Assinatura do Xerife</div><div>Conferência do Alto Comando</div><div>Data da Revista</div></div>
+      <p class="footnote">Oeste Roleplay · Registro reservado da Cavalaria · Estética histórica fictícia</p>
+    </footer>
+  </article>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="comum.js"></script>
+<script src="painel.js"></script>
+</body>
+</html>

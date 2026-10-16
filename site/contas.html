@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contas · Cavalaria | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main class="wrap">
+  <article class="paper">
+    <header class="masthead">
+      <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
+      <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
+      <h1>Contas de Acesso</h1>
+      <div class="subtitle">Alto Comando · Oeste Roleplay</div>
+      <div class="rule">✦</div>
+    </header>
+
+    <div id="message" class="system-msg hide" role="status"></div>
+
+    <div id="private" class="hide">
+      <div class="sessionbar">
+        <div><strong id="userLabel"></strong> · <span class="pill">Alto Comando</span></div>
+        <div class="session-actions">
+          <a class="btn secondary" href="painel.html">Voltar ao registro</a>
+          <button class="btn secondary" id="logout">Sair da sessão</button>
+        </div>
+      </div>
+
+      <section class="panel-box">
+        <h2>Nova conta</h2>
+        <form id="createForm" class="account-form">
+          <label class="field"><span>Nome no RP</span><input id="newName" maxlength="80" required placeholder="Ex.: Bahia De La Plata"></label>
+          <label class="field"><span>Usuário ou e-mail</span><input id="newLogin" autocapitalize="none" spellcheck="false" required placeholder="Ex.: bahia"></label>
+          <label class="field"><span>Cargo no painel</span>
+            <select id="newRole"><option value="xerife">Xerife</option><option value="admin">Alto Comando</option></select>
+          </label>
+          <label class="field"><span>Senha temporária</span>
+            <span class="password-row"><input id="newPassword" minlength="8" required autocomplete="off"><button class="btn secondary" type="button" id="generate">Gerar</button></span>
+          </label>
+          <button class="btn" type="submit">Criar conta</button>
+        </form>
+        <div id="credential" class="credential hide"></div>
+        <p class="small">O oficial entra com o usuário e a senha temporária e, no primeiro acesso, é obrigado a definir uma senha pessoal. Passe a senha temporária só em particular.</p>
+      </section>
+
+      <section class="section">
+        <div class="sectionhead">
+          <div><h2>✦ Contas cadastradas</h2><small>"Sem acesso" bloqueia a entrada no painel na hora, sem apagar o histórico da pessoa.</small></div>
+          <div class="counter" id="counter"></div>
+        </div>
+        <div class="tablewrap"><table class="accounts">
+          <thead><tr><th>Nº</th><th>Nome no RP</th><th>Usuário / e-mail</th><th>Cargo</th><th>Último acesso</th><th>Ações</th></tr></thead>
+          <tbody id="accounts"></tbody>
+        </table></div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <strong>Disciplina · Honra · Hierarquia · Justiça</strong>
+      <p class="footnote">Oeste Roleplay · Registro reservado da Cavalaria</p>
+    </footer>
+  </article>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="comum.js"></script>
+<script src="contas.js"></script>
+</body>
+</html>
