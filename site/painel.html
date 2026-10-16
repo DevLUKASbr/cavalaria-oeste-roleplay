@@ -21,27 +21,9 @@
     </header>
 
     <div id="message" class="system-msg hide" role="status"></div>
+    <div id="shell"></div>
 
     <div id="private" class="hide">
-      <div class="sessionbar no-print">
-        <div><strong id="userLabel"></strong> · <span id="connection">Conectando…</span> <span class="pill" id="roleLabel"></span></div>
-        <div class="session-actions">
-          <a class="btn secondary hide" id="accountsLink" href="contas.html">Contas</a>
-          <button class="btn secondary" id="passwordToggle">Trocar senha</button>
-          <button class="btn secondary" id="logout">Sair da sessão</button>
-        </div>
-      </div>
-
-      <form id="passwordForm" class="password-panel hide no-print">
-        <strong id="passwordTitle">Trocar minha senha</strong>
-        <label class="field"><span>Nova senha</span><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-        <label class="field"><span>Repita a nova senha</span><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-        <div class="password-actions">
-          <button class="btn" type="submit">Salvar nova senha</button>
-          <button class="btn secondary" type="button" id="passwordCancel">Cancelar</button>
-        </div>
-      </form>
-
       <div class="stats" id="stats"></div>
 
       <div class="toolbar no-print">

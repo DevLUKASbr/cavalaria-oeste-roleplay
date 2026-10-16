@@ -19,16 +19,9 @@
     </header>
 
     <div id="message" class="system-msg hide" role="status"></div>
+    <div id="shell"></div>
 
     <div id="private" class="hide">
-      <div class="sessionbar">
-        <div><strong id="userLabel"></strong> · <span class="pill" id="roleLabel"></span></div>
-        <div class="session-actions">
-          <a class="btn secondary" href="painel.html">Voltar ao registro</a>
-          <button class="btn secondary" id="logout">Sair da sessão</button>
-        </div>
-      </div>
-
       <section class="panel-box">
         <h2>Nova conta</h2>
         <form id="createForm" class="account-form">
@@ -38,12 +31,12 @@
             <select id="newCargo"></select>
           </label>
           <label class="field"><span>Senha temporária</span>
-            <span class="password-row"><input id="newPassword" minlength="8" required autocomplete="off"><button class="btn secondary" type="button" id="generate">Gerar</button></span>
+            <span class="password-row"><input id="tempPassword" minlength="8" required autocomplete="off"><button class="btn secondary" type="button" id="generate">Gerar</button></span>
           </label>
           <button class="btn" type="submit">Criar conta</button>
         </form>
         <div id="credential" class="credential hide"></div>
-        <p class="small">O oficial entra com o usuário e a senha temporária e, no primeiro acesso, é obrigado a definir uma senha pessoal. Passe a senha temporária só em particular.</p>
+        <p class="small"><b>Xerife, Sub-Xerife e Adm</b> acessam todas as páginas. <b>Membro</b> por enquanto só lê Treinamentos.<br>O oficial entra com o usuário e a senha temporária e, no primeiro acesso, é obrigado a definir uma senha pessoal. Passe a senha temporária só em particular.</p>
       </section>
 
       <section class="section">

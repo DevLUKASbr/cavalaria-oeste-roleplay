@@ -1,7 +1,7 @@
-/* Tela de login: autentica no Supabase e só deixa passar contas liberadas pelo Alto Comando. */
+/* Tela de login: autentica no Supabase e leva cada cargo para a primeira página que ele pode ver. */
 (async () => {
   'use strict';
-  const { $, setHidden, message, isConfigured, db, loginEmail, fetchMembership } = window.Cavalaria;
+  const { $, setHidden, message, isConfigured, db, loginEmail, loadAccess, firstPageOf } = window.Cavalaria;
 
   const REASONS = {
     'nao-autorizado': ['Esta conta não está autorizada. Solicite liberação ao Alto Comando.', 'error'],
@@ -14,15 +14,24 @@
     return;
   }
 
-  // Já logado e liberado? Vai direto para o painel.
+  // Página inicial da conta logada, ou null se ela não tem acesso a nada.
+  async function homePage() {
+    try {
+      const access = await loadAccess();
+      return access ? firstPageOf(access) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Já logado e com acesso? Vai direto.
   const { data } = await db.auth.getSession();
   if (data?.session) {
-    try {
-      if (await fetchMembership(data.session.user.id)) {
-        location.replace('painel.html');
-        return;
-      }
-    } catch { /* segue para o formulário */ }
+    const home = await homePage();
+    if (home) {
+      location.replace(home.href);
+      return;
+    }
     await db.auth.signOut();
   }
 
@@ -37,7 +46,7 @@
     button.disabled = true;
     message('Conferindo credenciais…');
 
-    const { data: auth, error } = await db.auth.signInWithPassword({
+    const { error } = await db.auth.signInWithPassword({
       email: loginEmail($('loginUser').value),
       password: $('password').value,
     });
@@ -48,16 +57,13 @@
       return;
     }
 
-    let membership = null;
-    try {
-      membership = await fetchMembership(auth.user.id);
-    } catch { /* tratado abaixo como sem acesso */ }
-    if (!membership) {
+    const home = await homePage();
+    if (!home) {
       await db.auth.signOut();
       message(...REASONS['nao-autorizado']);
       button.disabled = false;
       return;
     }
-    location.replace('painel.html');
+    location.replace(home.href);
   });
 })();
