@@ -4,16 +4,19 @@
  * Usa a chave secreta do Supabase, que fica SOMENTE nas variáveis de ambiente do Netlify
  * (SUPABASE_URL e SUPABASE_SECRET_KEY) e nunca chega ao navegador.
  *
- *   GET  → lista de contas. Xerife recebe só { email, nome }; Alto Comando recebe tudo.
- *   POST { acao: 'criar',  email, nome, role, senha }   (Alto Comando)
- *   POST { acao: 'editar', id, nome, role|null }         (Alto Comando; role null = sem acesso)
- *   POST { acao: 'senha',  id, senha }                   (Alto Comando)
+ *   GET  → lista de contas. Acesso limitado recebe só { email, nome }; acesso total recebe tudo.
+ *   POST { acao: 'criar',  email, nome, cargo, senha }   (acesso total)
+ *   POST { acao: 'editar', id, nome, cargo|null }         (acesso total; cargo null = sem acesso)
+ *   POST { acao: 'senha',  id, senha }                    (acesso total)
  *
- * O nome do oficial fica em app_metadata.nome (só a chave secreta altera) e o cargo em
- * public.cavalaria_membros, a mesma tabela que as regras RLS do banco já consultam.
+ * Nome e cargo do oficial ficam em app_metadata (só a chave secreta altera). O nível de acesso
+ * fica em public.cavalaria_membros.role, a tabela que as regras RLS do banco já consultam:
+ *   'admin'  = acesso total (todas as páginas, contas, reverter exoneração);
+ *   'xerife' = acesso limitado (só o painel). Hoje nenhum cargo usa este nível.
  */
 
-const ROLES = ['admin', 'xerife'];
+// Cargo exibido → nível de acesso no banco. Por enquanto todos os cargos têm acesso total.
+const CARGOS = { 'Xerife': 'admin', 'Sub-Xerife': 'admin', 'Adm': 'admin' };
 const BAN_FOREVER = '876000h'; // ~100 anos: impede renovar a sessão de quem perdeu o acesso
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -112,11 +115,14 @@ function cleanName(nome) {
   return value;
 }
 
-function cleanRole(role, { allowNone = false } = {}) {
-  if (allowNone && (role === null || role === '')) return null;
-  if (!ROLES.includes(role)) throw new HttpError(400, 'Cargo inválido.');
-  return role;
+function cleanCargo(cargo, { allowNone = false } = {}) {
+  if (allowNone && (cargo === null || cargo === '')) return null;
+  if (!Object.hasOwn(CARGOS, cargo)) throw new HttpError(400, 'Cargo inválido.');
+  return cargo;
 }
+
+// Contas antigas, sem cargo definido, aparecem pelo nível de acesso.
+const cargoOf = (user, role) => user.app_metadata?.cargo || (role === 'admin' ? 'Adm' : role ? 'Acesso limitado' : null);
 
 function cleanPassword(senha) {
   const value = String(senha ?? '');
@@ -141,28 +147,28 @@ async function listAccounts(sb, isAdmin) {
     id: u.id,
     email: u.email,
     nome: u.app_metadata?.nome || '',
-    role: roleById.get(u.id) || null,
+    cargo: roleById.has(u.id) ? cargoOf(u, roleById.get(u.id)) : null,
     ultimo_acesso: u.last_sign_in_at || null,
   }));
   if (isAdmin) return accounts;
-  return accounts.filter(a => a.role).map(({ email, nome }) => ({ email, nome }));
+  return accounts.filter(a => a.cargo).map(({ email, nome }) => ({ email, nome }));
 }
 
 async function createAccount(sb, body) {
   const email = cleanEmail(body.email);
   const nome = cleanName(body.nome);
-  const role = cleanRole(body.role);
+  const cargo = cleanCargo(body.cargo);
   const user = await sb.createUser({
     email,
     password: cleanPassword(body.senha),
     email_confirm: true,
-    app_metadata: { nome },
+    app_metadata: { nome, cargo },
     user_metadata: { trocar_senha: true },
   }).catch(e => {
     if (/already been registered|already exists/i.test(e.message)) throw new HttpError(409, 'Já existe uma conta com esse usuário ou e-mail.');
     throw e;
   });
-  await sb.setRole(user.id, role);
+  await sb.setRole(user.id, CARGOS[cargo]);
   return { id: user.id };
 }
 
@@ -170,13 +176,19 @@ async function editAccount(sb, body, caller) {
   const id = String(body.id ?? '');
   if (!id) throw new HttpError(400, 'Conta não informada.');
   const nome = cleanName(body.nome);
-  const role = cleanRole(body.role, { allowNone: true });
+  // Sem "cargo" no pedido = manter cargo e acesso como estão (só renomear).
+  if (body.cargo === undefined) {
+    await sb.updateUser(id, { app_metadata: { nome } });
+    return { ok: true };
+  }
+  const cargo = cleanCargo(body.cargo, { allowNone: true });
+  const role = cargo ? CARGOS[cargo] : null;
   if (id === caller.id && role !== 'admin') {
-    throw new HttpError(400, 'Você não pode tirar o próprio acesso de Alto Comando.');
+    throw new HttpError(400, 'Você não pode tirar o próprio acesso total.');
   }
 
   // Sem acesso: sai da lista de membros (as regras RLS bloqueiam na hora) e não renova mais a sessão.
-  await sb.updateUser(id, { app_metadata: { nome }, ban_duration: role ? 'none' : BAN_FOREVER });
+  await sb.updateUser(id, { app_metadata: { nome, cargo }, ban_duration: role ? 'none' : BAN_FOREVER });
   if (role) await sb.setRole(id, role);
   else await sb.removeRole(id);
   return { ok: true };
@@ -208,7 +220,7 @@ export default async function handler(req) {
 
     if (req.method === 'GET') return json(200, { contas: await listAccounts(sb, isAdmin) });
 
-    if (!isAdmin) throw new HttpError(403, 'Apenas o Alto Comando gerencia contas.');
+    if (!isAdmin) throw new HttpError(403, 'Sua conta não tem permissão para gerenciar contas.');
     const body = await req.json().catch(() => ({}));
     switch (body.acao) {
       case 'criar': return json(201, await createAccount(sb, body));
