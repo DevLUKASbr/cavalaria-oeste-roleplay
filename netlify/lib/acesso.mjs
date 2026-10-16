@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 
 export const PAGES = ['registro', 'treinamentos', 'recrutamento', 'investigacoes', 'acoes', 'contas'];
-const FULL_ACCESS = [...PAGES, 'treinamentos.editar'];
+const FULL_ACCESS = [...PAGES, 'treinamentos.editar', 'recrutamento.editar'];
 
 export const PERMISSOES = {
   'Xerife': FULL_ACCESS,

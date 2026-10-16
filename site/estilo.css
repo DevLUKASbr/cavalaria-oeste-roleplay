@@ -83,3 +83,36 @@ body.login-page{min-height:100vh;display:flex;align-items:center;justify-content
 .construction h2{font:700 24px 'Cinzel',serif;text-transform:uppercase;letter-spacing:2px;margin:0 0 10px}
 .construction p{max-width:520px;margin:0 auto;color:#6b5d48;line-height:1.7}
 @media(max-width:720px){.mainnav a{min-width:45%}.topic{padding:16px}}
+
+/* ---------- Recrutamento ---------- */
+.tabs{display:flex;gap:0;margin:0 0 18px;border-bottom:2px solid var(--gold)}
+.tab{flex:1;background:#e9d8b4;border:1px solid #c2ac82;border-bottom:0;padding:12px 10px;cursor:pointer;font:700 13px 'Cinzel',serif;letter-spacing:1px;text-transform:uppercase;color:#4c402b}
+.tab.active{background:var(--forest);color:#f6e6c4}
+.script-step{background:#fbf2df;border:1px solid #c2ac82;border-left:5px solid var(--gold);padding:16px 20px;margin:0 0 14px;font-size:14px;line-height:1.7}
+.script-step h3{font:700 18px 'Cinzel',serif;margin:0 0 8px}
+.script-step ul,.script-step ol{margin:6px 0;padding-left:22px}
+.script-step li{margin:4px 0}
+.script-step code{background:#efe0bf;padding:1px 6px;border:1px solid #cdb68a}
+.announce{display:flex;gap:12px;align-items:center;background:#f3e4c4;border:1px dashed #b89d6a;padding:10px 12px;margin:8px 0}
+.announce p{flex:1;margin:0}
+.announce .btn{min-height:36px;white-space:nowrap}
+.record-header{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.candidate{border:1px solid #b89d6a;background:#fffaf0;margin:0 0 14px;padding:0 16px 12px}
+.candidate summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;cursor:pointer;font:700 16px 'Cinzel',serif}
+.candidate summary .btn{min-height:30px;font-size:11px}
+.candidate h5{font:700 13px 'Cinzel',serif;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;color:#5d4c31;border-bottom:1px solid #d8c29a;padding-bottom:4px}
+.candidate textarea{min-height:0}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.record details{margin-top:12px}
+.record details summary{cursor:pointer;font-weight:bold;color:#5d4c31}
+.candidate-detail{border-top:1px solid #d8c29a;margin-top:12px;padding-top:10px}
+.candidate-detail h4{font:700 15px 'Cinzel',serif;margin:0 0 8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 16px;margin:0 0 10px}
+.facts dt{font:700 10px 'Cinzel',serif;text-transform:uppercase;color:#7a6548}
+.facts dd{margin:0;font-size:13px;overflow-wrap:anywhere}
+.qa{margin:8px 0}.qa .q{margin:0;font-size:12px;color:#6f5a3a;font-style:italic}.qa .a{margin:2px 0 0;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.result{display:inline-block;font:700 10px 'Cinzel',serif;text-transform:uppercase;letter-spacing:.5px;padding:3px 7px;border:1px solid}
+.result.ok{color:#2f5b33;border-color:#7e9c61;background:#dfe9cf}
+.result.bad{color:#8b221b;border-color:#ad4840;background:#f6d5d1}
+.result.wait{color:#6c4b22;border-color:#b89d6a;background:#f3e4c4}
+@media(max-width:720px){.record-header,.form-grid{grid-template-columns:1fr}.announce{flex-direction:column;align-items:stretch}}
