@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="800" viewBox="0 0 560 800" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="paper" x2="1" y2="1">
+      <stop stop-color="#dec18b"/><stop offset=".17" stop-color="#efdbad"/>
+      <stop offset=".52" stop-color="#f6e2b6"/><stop offset=".85" stop-color="#e9ce9a"/>
+      <stop offset="1" stop-color="#cfab73"/>
+    </linearGradient>
+    <radialGradient id="age">
+      <stop offset=".55" stop-color="#a46d2e" stop-opacity="0"/>
+      <stop offset="1" stop-color="#89571e" stop-opacity=".26"/>
+    </radialGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+    <path id="outline" d="M28 4H532Q532 28 556 28V772Q532 772 532 796H28Q28 772 4 772V28Q28 28 28 4Z"/>
+    <clipPath id="clip"><use href="#outline"/></clipPath>
+    <g id="corner" fill="none" stroke="#82602d" stroke-width="1">
+      <path d="M20 64V40Q40 40 40 20H64M26 56V44Q44 44 44 26H56"/>
+      <path d="m38 38 3-5 3 5-3 5Z" fill="#82602d"/>
+      <path d="m53 22 3-2 3 2-3 2Z" fill="#82602d"/>
+    </g>
+  </defs>
+  <use href="#outline" fill="url(#paper)"/>
+  <g clip-path="url(#clip)">
+    <path fill="#b19a71" opacity=".14" filter="url(#grain)" d="M0 0H560V800H0Z"/>
+    <path fill="url(#age)" d="M0 0H560V800H0Z"/>
+  </g>
+  <use href="#outline" fill="none" stroke="#24291b" stroke-width="7"/>
+  <use href="#outline" fill="none" stroke="#b68b46" stroke-width="2"/>
+  <path d="M36 15H524Q524 36 545 36V764Q524 764 524 785H36Q36 764 15 764V36Q36 36 36 15Z" fill="none" stroke="#927044" stroke-width="1"/>
+  <path d="M48 20H512M20 49V751M540 49V751M48 780H512" fill="none" stroke="#9e7b49" stroke-width=".7" stroke-dasharray="2 3"/>
+  <use href="#corner"/>
+  <use href="#corner" transform="translate(560) scale(-1 1)"/>
+  <use href="#corner" transform="translate(0 800) scale(1 -1)"/>
+  <use href="#corner" transform="translate(560 800) scale(-1 -1)"/>
+  <g fill="#b88b43" stroke="#3b321e" stroke-width="1">
+    <path d="m227 4 5-3 5 3-5 3Zm96 0 5-3 5 3-5 3Z"/>
+    <path d="m227 796 5-3 5 3-5 3Zm96 0 5-3 5 3-5 3Z"/>
+  </g>
+</svg>
