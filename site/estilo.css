@@ -47,3 +47,39 @@ body.login-page{min-height:100vh;display:flex;align-items:center;justify-content
 .accounts tr.no-access .name{text-decoration:line-through}
 .tag-me{font:700 10px 'Cinzel',serif;color:#315b42;margin-left:6px}
 @media(max-width:720px){.login-card{padding:26px 18px 20px}.account-form{grid-template-columns:1fr}}
+
+/* ---------- Menu principal ---------- */
+.mainnav{display:flex;flex-wrap:wrap;gap:0;margin:-15px 0 18px;background:#263b2c;border-top:1px solid #3d5544}
+.mainnav a{flex:1;min-width:120px;text-align:center;padding:11px 10px;color:#e8d6ad;text-decoration:none;font:700 12px 'Cinzel',serif;letter-spacing:1px;text-transform:uppercase;border-right:1px solid #3d5544}
+.mainnav a:last-child{border-right:0}
+.mainnav a:hover{background:#2f4a37;color:#fff3d6}
+.mainnav a.active{background:var(--gold);color:#161e19}
+
+/* ---------- Treinamentos ---------- */
+.topic-form .field{margin-bottom:12px}
+.topic-form textarea{display:block;width:100%;min-height:130px;border:1px solid #aa8e60;padding:10px;background:#fff9ef;font:14px/1.6 Georgia,serif;color:var(--ink);resize:vertical}
+.video-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.video-row{display:flex;gap:6px}.video-row input{flex:1}
+.video-row .btn{min-height:44px}
+.form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.form-actions .btn{min-height:42px;padding:0 18px}
+.topic{background:#fbf2df;border:1px solid #c2ac82;border-left:5px solid var(--gold);padding:20px 22px;margin:0 0 18px}
+.topic h3{font:700 22px/1.3 'Cinzel',serif;margin:0}
+.topic .topic-sub{font:italic 15px Georgia,serif;color:#6f5a3a;margin:6px 0 0}
+.topic .topic-meta{font-size:11px;color:#7a6548;margin:10px 0 0}
+.topic .topic-body{font-size:14px;line-height:1.75;margin:14px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.topic .videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px}
+.topic .video-embed{position:relative;aspect-ratio:16/9;background:#172820;border:1px solid #8b7149}
+.topic .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.topic .video-link{display:flex;align-items:center;gap:8px;padding:12px;background:#f3e4c4;border:1px solid #c2ac82;color:#3b2f1d;font-size:13px;overflow-wrap:anywhere}
+.topic .topic-actions{display:flex;gap:8px;margin-top:16px}
+.topic .topic-actions .btn{min-height:34px;font-size:12px}
+.btn.danger{background:#7b281f;border-color:#692017;color:#fff}
+.topic-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:6px 0 18px}
+.topic-toolbar input{flex:1;min-width:200px;height:40px;border:1px solid #ab9a76;padding:0 11px;background:#fff7e8;font:13px Georgia,serif}
+.topic-toolbar .btn{min-height:40px;padding:0 16px}
+
+/* ---------- Em construção ---------- */
+.construction{text-align:center;padding:48px 20px;border:2px dashed #b89d6a;background:#f8ecd2;margin:10px 0 20px}
+.construction h2{font:700 24px 'Cinzel',serif;text-transform:uppercase;letter-spacing:2px;margin:0 0 10px}
+.construction p{max-width:520px;margin:0 auto;color:#6b5d48;line-height:1.7}
+@media(max-width:720px){.mainnav a{min-width:45%}.topic{padding:16px}}

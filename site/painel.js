@@ -4,9 +4,9 @@
  */
 (async () => {
   'use strict';
-  const { $, esc, formatDateTime, setHidden, message, db, displayName, cargoLabel, requireMember, api, signOut } = window.Cavalaria;
+  const { $, esc, formatDateTime, setHidden, message, db, requirePage, api } = window.Cavalaria;
 
-  const access = await requireMember();
+  const access = await requirePage('registro');
   if (!access) return;
 
   // Lemoyne e "Sem jurisdição" continuam disponíveis: contingentes fechados podem reabrir.
@@ -25,7 +25,8 @@
     loading: false,
   };
 
-  const isAdmin = () => state.membership.role === 'admin';
+  // Reverter exoneração exige o nível 'admin' no banco (regra da função reverter_exoneracao).
+  const isAdmin = () => state.membership?.role === 'admin';
   const isExecuted = officer => Boolean(officer.executed_at);
   // Situação exibida: exoneração confirmada vira "Exonerado", o resto segue o status salvo.
   const situationOf = officer => (isExecuted(officer) ? 'Exonerado' : officer.status);
@@ -142,7 +143,7 @@
   // Nomes vêm da Function; se ela estiver fora do ar, o painel segue mostrando e-mails.
   async function fetchNames() {
     try {
-      const { contas } = await api('GET');
+      const { contas } = await api('contas');
       state.names = new Map(contas.filter(c => c.nome).map(c => [c.email, c.nome]));
     } catch (e) {
       console.warn('Nomes dos oficiais indisponíveis:', e.message);
@@ -286,45 +287,9 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Troca de senha (obrigatória no primeiro acesso de contas criadas na página Contas)
-  // ---------------------------------------------------------------------------
-
-  function openPasswordForm(firstAccess = false) {
-    $('passwordTitle').textContent = firstAccess ? 'Defina sua senha pessoal' : 'Trocar minha senha';
-    setHidden('passwordCancel', firstAccess);
-    setHidden('passwordForm', false);
-    $('newPassword').focus();
-  }
-
-  function closePasswordForm() {
-    $('passwordForm').reset();
-    setHidden('passwordForm', true);
-  }
-
-  $('passwordToggle').onclick = () => openPasswordForm();
-  $('passwordCancel').onclick = closePasswordForm;
-
-  $('passwordForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const password = $('newPassword').value;
-    if (password !== $('confirmPassword').value) {
-      message('As duas senhas digitadas não conferem.', 'error');
-      return;
-    }
-    const { error } = await db.auth.updateUser({ password, data: { trocar_senha: false } });
-    if (error) {
-      message('Não foi possível trocar a senha: ' + error.message, 'error');
-      return;
-    }
-    closePasswordForm();
-    message('Senha alterada com sucesso.', 'success');
-  });
-
-  // ---------------------------------------------------------------------------
   // Eventos
   // ---------------------------------------------------------------------------
 
-  $('logout').onclick = signOut;
   $('search').addEventListener('input', render);
   $('filter').addEventListener('change', render);
   $('csv').onclick = exportCsv;
@@ -365,16 +330,7 @@
   // Inicialização
   // ---------------------------------------------------------------------------
 
-  const user = state.session.user;
-  $('userLabel').textContent = displayName(user);
-  $('roleLabel').textContent = cargoLabel(user, state.membership);
-  setHidden('accountsLink', !isAdmin());
   setHidden('private', false);
-  if (user.user_metadata?.trocar_senha) {
-    openPasswordForm(true);
-    message('Primeiro acesso: defina uma senha pessoal antes de continuar.');
-  }
-
   await fetchNames();
   await fetchOfficers();
   subscribe();

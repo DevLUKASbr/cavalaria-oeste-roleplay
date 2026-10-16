@@ -1,12 +1,12 @@
 /* Gestão de contas (somente acesso total). Toda alteração passa pela Netlify Function /api/contas. */
 (async () => {
   'use strict';
-  const { $, esc, formatDateTime, setHidden, message, config, displayName, CARGOS, cargoLabel, loginEmail, requireMember, api, signOut } = window.Cavalaria;
+  const { $, esc, formatDateTime, setHidden, message, config, CARGOS, loginEmail, requirePage, api } = window.Cavalaria;
 
-  const access = await requireMember({ adminOnly: true });
+  const access = await requirePage('contas');
   if (!access) return;
 
-  // Todos os cargos têm acesso total por enquanto; "Sem acesso" bloqueia a conta.
+  // "Sem acesso" bloqueia a conta. As permissões de cada cargo ficam em comum.js e netlify/lib/acesso.mjs.
   // Cargo fora da lista (conta antiga) aparece como "(atual)" e não muda se a pessoa só salvar o nome.
   const KEEP = '__atual';
   function cargoOptions(selected, { allowNone }) {
@@ -21,7 +21,7 @@
       .map(([value, label]) => `<option value="${esc(value)}" ${value === chosen ? 'selected' : ''}>${esc(label)}</option>`)
       .join('');
   }
-  const myId = access.session.user.id;
+  const myId = access.user.id;
   let accounts = [];
 
   // Contas "@loginDomain" aparecem só pelo usuário, como o oficial digita no login.
@@ -65,23 +65,23 @@
 
   async function load() {
     try {
-      ({ contas: accounts } = await api('GET'));
+      ({ contas: accounts } = await api('contas'));
       render();
     } catch (e) {
       message('Não foi possível carregar as contas: ' + e.message, 'error');
     }
   }
 
-  $('generate').onclick = () => { $('newPassword').value = generatePassword(); };
+  $('generate').onclick = () => { $('tempPassword').value = generatePassword(); };
 
   $('createForm').addEventListener('submit', async e => {
     e.preventDefault();
     const button = e.target.querySelector('button[type="submit"]');
     const email = loginEmail($('newLogin').value);
-    const password = $('newPassword').value;
+    const password = $('tempPassword').value;
     button.disabled = true;
     try {
-      await api('POST', { acao: 'criar', email, nome: $('newName').value.trim(), cargo: $('newCargo').value, senha: password });
+      await api('contas', 'POST', { acao: 'criar', email, nome: $('newName').value.trim(), cargo: $('newCargo').value, senha: password });
       showCredential(loginLabel(email), password, `Conta de ${$('newName').value.trim()} criada.`);
       message('Conta criada com sucesso.', 'success');
       $('createForm').reset();
@@ -107,7 +107,7 @@
       if (cargo === null && account.cargo && !confirm(`Tirar o acesso de ${account.nome || account.email} ao site?`)) return;
       button.disabled = true;
       try {
-        await api('POST', { acao: 'editar', id: account.id, nome, cargo });
+        await api('contas', 'POST', { acao: 'editar', id: account.id, nome, cargo });
         message(`${nome || account.email}: alterações salvas.`, 'success');
         await load();
       } catch (err) {
@@ -121,7 +121,7 @@
     const password = generatePassword();
     button.disabled = true;
     try {
-      await api('POST', { acao: 'senha', id: account.id, senha: password });
+      await api('contas', 'POST', { acao: 'senha', id: account.id, senha: password });
       showCredential(loginLabel(account.email), password, `Nova senha de ${account.nome || account.email}.`);
       message('Senha redefinida.', 'success');
     } catch (err) {
@@ -131,9 +131,6 @@
     }
   });
 
-  $('logout').onclick = signOut;
-  $('userLabel').textContent = displayName(access.session.user);
-  $('roleLabel').textContent = cargoLabel(access.session.user, access.membership);
   $('newCargo').innerHTML = cargoOptions('Xerife', { allowNone: false });
   setHidden('private', false);
   await load();

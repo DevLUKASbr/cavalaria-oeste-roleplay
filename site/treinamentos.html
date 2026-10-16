@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Treinamentos · Cavalaria | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main class="wrap">
+  <article class="paper">
+    <header class="masthead">
+      <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
+      <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
+      <h1>Treinamentos</h1>
+      <div class="subtitle">Instrução da Cavalaria · Oeste Roleplay</div>
+      <div class="rule">✦</div>
+    </header>
+
+    <div id="message" class="system-msg hide" role="status"></div>
+    <div id="shell"></div>
+
+    <div id="private" class="hide">
+      <div class="topic-toolbar">
+        <input id="search" type="search" placeholder="Buscar tópico…" aria-label="Buscar tópico">
+        <button class="btn hide" id="newTopic">Novo tópico</button>
+      </div>
+
+      <section id="editor" class="panel-box hide">
+        <h2 id="editorTitle">Novo tópico</h2>
+        <form id="topicForm" class="topic-form">
+          <label class="field"><span>Título *</span><input id="titulo" maxlength="120" required minlength="3"></label>
+          <label class="field"><span>Subtítulo (opcional)</span><input id="subtitulo" maxlength="160"></label>
+          <label class="field"><span>Descrição</span><textarea id="descricao" maxlength="5000" placeholder="Passo a passo, regras, observações…"></textarea></label>
+          <div class="field">
+            <span>Vídeos (links do YouTube, Medal, Drive…)</span>
+            <div id="videos" class="video-list"></div>
+            <button class="btn secondary" type="button" id="addVideo">+ Adicionar vídeo</button>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="submit" id="saveTopic">Publicar tópico</button>
+            <button class="btn secondary" type="button" id="cancelTopic">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <div id="topics"></div>
+    </div>
+
+    <footer class="footer">
+      <strong>Disciplina · Honra · Hierarquia · Justiça</strong>
+      <p class="footnote">Oeste Roleplay · Registro reservado da Cavalaria</p>
+    </footer>
+  </article>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="comum.js"></script>
+<script src="treinamentos.js"></script>
+</body>
+</html>

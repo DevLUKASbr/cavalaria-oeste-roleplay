@@ -2,19 +2,25 @@
 
 Painel do Alto Comando para revista de efetivo, avaliação de atividade e controle de exonerações.
 
-- **Site** (pasta `site/`): tela de login, painel do registro e gestão de contas. HTML/JS puro, sem build.
-- **Banco**: Supabase (Postgres com regras RLS + Realtime).
-- **Netlify**: hospeda o site e roda a Function `netlify/functions/contas.mjs` (rota `/api/contas`), que gerencia as contas usando a chave secreta do Supabase guardada só no Netlify.
+- **Site** (pasta `site/`): login, registro, treinamentos, recrutamento, investigações, ações e contas. HTML/JS puro, sem build.
+- **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage para os tópicos de treinamento).
+- **Netlify**: hospeda o site e roda as Functions `contas` e `treinamentos` (rotas `/api/contas` e `/api/treinamentos`), que usam a chave secreta do Supabase guardada só no Netlify.
 
-Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **No dia a dia ninguém precisa abrir o SQL Editor**: contas, nomes, cargos e senhas são gerenciados na página **Contas** do painel.
+Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **Ninguém precisa abrir o SQL Editor**: contas, nomes, cargos, senhas e tópicos são gerenciados pelo próprio site.
 
 ## Páginas
 
 | Página | Quem acessa | O que faz |
 |---|---|---|
 | `index.html` | todos | Login com usuário (ou e-mail) e senha |
-| `painel.html` | Xerife, Sub-Xerife e Adm | Registro dos oficiais, exonerações, histórico, CSV |
-| `contas.html` | Xerife, Sub-Xerife e Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
+| `painel.html` (Registro) | Xerife, Sub-Xerife, Adm | Registro dos oficiais, exonerações, histórico, CSV |
+| `treinamentos.html` | Xerife, Sub-Xerife, Adm (criam e editam) · Membro (só lê) | Tópicos de treinamento com título, subtítulo, descrição e vídeos |
+| `recrutamento.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `investigacoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `acoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
+
+O menu de cada pessoa mostra só as páginas que o cargo dela permite. Quem abre uma página sem permissão é levado para a primeira página permitida.
 
 ## Cargos
 
@@ -23,14 +29,24 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | **Xerife** | Sheriff da Cavalaria | todas as páginas |
 | **Sub-Xerife** | Sub-Sheriff | todas as páginas |
 | **Adm** | administra o site (não é cargo do RP) | todas as páginas |
+| **Membro** | demais integrantes | **provisório:** só lê Treinamentos. O acesso definitivo ainda será definido. |
 
-Por enquanto só esses três cargos têm conta, e todos têm **acesso total**: painel, página Contas e reverter exonerações. O cargo é escolhido em **Contas** e aparece na barra de cima do site.
+O cargo é escolhido em **Contas** e aparece na barra de cima do site.
 
-Por baixo, cada cargo vira um nível de acesso na tabela `cavalaria_membros`: `admin` = acesso total, `xerife` = só o painel. O nível `xerife` continua existindo para quando outros cargos (ex.: Oficial-Sênior) ganharem acesso limitado. Para isso, basta mudar o mapa `CARGOS` em `netlify/functions/contas.mjs` e a lista em `site/comum.js`. Contas antigas sem cargo aparecem como **Adm** (acesso total) ou **Acesso limitado**.
+**Onde as permissões estão definidas:** no mapa `PERMISSOES` de `netlify/lib/acesso.mjs`. É ele que vale de verdade. O `site/comum.js` tem uma cópia só para montar o menu: **mude os dois juntos**. Para mudar o acesso do Membro, basta acrescentar páginas na lista dele, nos dois arquivos.
+
+O registro dos oficiais é protegido também pelo banco: só contas com nível na tabela `cavalaria_membros` leem e editam os registros. Xerife, Sub-Xerife e Adm recebem o nível `admin` (inclui reverter exoneração). O Membro não recebe nível, então não consegue ler o registro nem pela API. Se o Membro um dia ganhar acesso ao registro, também é preciso dar um nível a ele em `NIVEL_DO_CARGO` (`acesso.mjs`). Contas antigas sem cargo aparecem como **Adm** (nível `admin`) ou **Acesso limitado** (nível `xerife`, só o registro).
+
+## Treinamentos
+
+- Xerife, Sub-Xerife e Adm usam **Novo tópico**: título (obrigatório), subtítulo (opcional), descrição e até 10 links de vídeo.
+- Links do YouTube viram player na própria página. Outros links (Medal, Drive, Twitch…) viram um botão "Assistir vídeo".
+- Cada tópico mostra quem publicou e quem editou por último. Excluir pede confirmação e não tem volta.
+- Os tópicos ficam no **Supabase Storage**, bucket privado `cavalaria`, pasta `treinamentos/` (um arquivo JSON por tópico). O bucket é criado sozinho na primeira publicação. Só a Function lê e grava lá, com a chave secreta.
 
 ## Configurar o Netlify (uma vez)
 
-O `netlify.toml` já diz ao Netlify o que publicar (`site/`) e onde está a Function. Falta só:
+O `netlify.toml` já diz ao Netlify o que publicar (`site/`) e onde estão as Functions. Falta só:
 
 1. Em **Project configuration → Environment variables**, criar:
    - `SUPABASE_URL` = `https://qohigzayevglccdwtlkm.supabase.co`
