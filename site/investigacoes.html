@@ -6,9 +6,11 @@
   <title>Investigações · Cavalaria | Oeste Roleplay</title>
   <link rel="icon" href="logo-oeste.png">
   <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="admin.css">
 </head>
-<body data-pagina="investigacoes">
-<main class="wrap">
+<body class="admin-page" data-pagina="investigacoes">
+<div id="shell"></div>
+<main class="wrap" id="mainContent" tabindex="-1">
   <article class="paper">
     <header class="masthead">
       <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
@@ -18,13 +20,12 @@
       <div class="rule">✦</div>
     </header>
 
-    <div id="message" class="system-msg hide" role="status"></div>
-    <div id="shell"></div>
+    <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
 
     <div id="private" class="hide">
       <section class="construction">
-        <h2>Em construção</h2>
-        <p>A página de Investigações ainda está sendo definida pelo Alto Comando. Em breve, o conteúdo estará disponível aqui.</p>
+        <h2>Em desenvolvimento</h2>
+        <p>Os casos, dossiês e evidências de RP dependem de regras de acesso e armazenamento próprias, que serão aprovadas em uma próxima etapa. Nenhuma investigação é registrada nesta fase.</p>
       </section>
     </div>
 
@@ -37,6 +38,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script src="admin-shell.js"></script>
 <script src="comum.js"></script>
 <script src="construcao.js"></script>
 </body>

@@ -123,6 +123,9 @@
         </div>
       </form>`;
 
+    // O shell modular só reorganiza a interface; a verificação de acesso é a mesma.
+    window.CavalariaLayout?.mount(access, pageId);
+
     const openPasswordForm = (firstAccess = false) => {
       $('passwordTitle').textContent = firstAccess ? 'Defina sua senha pessoal' : 'Trocar minha senha';
       setHidden('passwordCancel', firstAccess);
@@ -176,7 +179,9 @@
     }
     if (!access) { goToLogin(); return null; }
 
-    if (!can(access, pageId)) {
+    // Início é uma visão dos módulos já autorizados, sem conceder novas permissões.
+    const canOpenHome = pageId === 'inicio' && PAGES.some(page => can(access, page.id));
+    if (!can(access, pageId) && !canOpenHome) {
       const fallback = firstPageOf(access);
       if (fallback) {
         location.replace(fallback.href);
