@@ -30,15 +30,17 @@
           <div class="form-grid three">
             <label class="field"><span>Nome *</span><input id="tNome" maxlength="80" required minlength="2"></label>
             <label class="field"><span>Tipo</span>
-              <select id="tTipo"><option value="Indivíduo">Pessoa</option><option value="Ponto de interesse">Ponto de interesse</option></select></label>
+              <select id="tTipo"><option value="Indivíduo">Pessoa</option><option value="Ponto de interesse">Lugar</option></select></label>
             <label class="field" data-person-only><span>Ocupação</span><input id="tOcupacao" maxlength="80" placeholder="Ex.: padeiro, fazendeiro, pistoleiro…"></label>
+            <label class="field" data-place-only><span>Categoria</span><select id="tCategoria"></select></label>
             <label class="field"><span>Grupo</span><select id="tGrupo"></select></label>
+            <label class="field" data-person-only><span>Trabalha em (lugar)</span><select id="tLocalId"></select></label>
             <label class="field"><span>Cidade / região</span><input id="tCidade" maxlength="60" list="cidades"></label>
-            <label class="field"><span id="tLocalLabel">Local de trabalho</span><input id="tLocal" maxlength="120" placeholder="Ex.: Padaria de Strawberry, Fazenda Dallas…"></label>
+            <label class="field"><span id="tLocalLabel">Local de trabalho</span><input id="tLocal" maxlength="120" placeholder="Ex.: Rua principal, perto da estação…"></label>
             <label class="field wide"><span>Foto (link https)</span><input id="tFoto" type="url" maxlength="800" placeholder="https://…"></label>
           </div>
           <div class="investigation-row">
-            <label class="check" data-person-only><input type="checkbox" id="tInvestigado"> <b>Sob investigação</b> (aparece como alvo no mapa)</label>
+            <label class="check"><input type="checkbox" id="tInvestigado"> <b>Sob investigação</b> (aparece como alvo no mapa)</label>
             <label class="field" id="tAmeacaField"><span>Nível de ameaça</span>
               <select id="tAmeaca"><option>Baixo</option><option>Médio</option><option>Crítico</option></select></label>
           </div>
@@ -77,6 +79,23 @@
         </form>
       </section>
 
+      <section id="linkEditor" class="panel-box hide">
+        <h2 id="linkEditorTitle">Novo vínculo</h2>
+        <form id="linkForm" class="topic-form">
+          <div class="form-grid three">
+            <label class="field"><span>De *</span><select id="lDe" required></select></label>
+            <label class="field"><span>Vínculo *</span><select id="lTipo" required></select></label>
+            <label class="field"><span>Para *</span><select id="lPara" required></select></label>
+            <label class="field wide"><span>Observação</span><input id="lObs" maxlength="300" placeholder="Ex.: chefe desde o assalto ao trem de Rhodes"></label>
+          </div>
+          <p class="small" id="lHint"></p>
+          <div class="form-actions">
+            <button class="btn" type="submit" id="saveLink">Salvar vínculo</button>
+            <button class="btn secondary" type="button" data-cancel="linkEditor">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
       <datalist id="cidades">
         <option>Valentine</option><option>Annesburg</option><option>Van Horn</option><option>Emerald Ranch</option>
         <option>Blackwater</option><option>Strawberry</option><option>Armadillo</option><option>Tumbleweed</option>
@@ -86,6 +105,7 @@
       <div class="tabs no-print" role="tablist">
         <button class="tab active" role="tab" data-tab="mapa" aria-selected="true">Mapa e alvos</button>
         <button class="tab" role="tab" data-tab="pessoas" aria-selected="false">Pessoas</button>
+        <button class="tab" role="tab" data-tab="lugares" aria-selected="false">Lugares</button>
         <button class="tab" role="tab" data-tab="grupos" aria-selected="false">Grupos</button>
       </div>
 
@@ -108,20 +128,22 @@
           <span><i class="dot medio"></i> Médio</span>
           <span><i class="dot baixo"></i> Baixo</span>
           <span><i class="dot pessoa"></i> Pessoa fora de investigação</span>
+          <span><i class="place-glyph">🏪</i> Lugar</span>
           <span><i class="group-glyph">⌂</i> Grupo / território</span>
+          <label><input type="checkbox" id="showPlaces" checked> Lugares</label>
           <label><input type="checkbox" id="showPeople"> Pessoas fora de investigação</label>
           <label><input type="checkbox" id="showGroups" checked> Grupos</label>
         </div>
 
         <div class="map-wrap">
-          <div id="map" aria-label="Mapa do Oeste com alvos e grupos"></div>
+          <div id="map" aria-label="Mapa do Oeste com alvos, lugares e grupos"></div>
           <div id="pickHint" class="pick-hint hide">⌖ Clique no mapa para marcar a posição · Esc ou clique direito para cancelar</div>
         </div>
         <p class="map-credit">Mapa: © Rockstar Games. Coordenadas no formato do jogo (x, y).</p>
 
         <section class="section">
           <div class="sectionhead">
-            <div><h2>✦ Alvos</h2><small>Pessoas sob investigação e pontos de interesse</small></div>
+            <div><h2>✦ Alvos</h2><small>Pessoas e lugares sob investigação</small></div>
             <div class="counter" id="targetCounter"></div>
           </div>
           <div class="tablewrap"><table class="inv-table">
@@ -132,6 +154,34 @@
       </section>
 
       <section id="tab-pessoas" class="tab-panel hide">
+        <section class="graph-box">
+          <div class="graph-head">
+            <div>
+              <h2>✦ Grafo de conspiração e liderança</h2>
+              <p class="small">Os círculos crescem com o número de vínculos e ganham peso extra para <b>líderes</b> e <b>sublíderes</b>. Relações de comando têm setas na direção da hierarquia. Clique duas vezes num círculo para editar.</p>
+            </div>
+            <div class="graph-actions no-print">
+              <label><input type="checkbox" id="graphGroups" checked> Grupos</label>
+              <label><input type="checkbox" id="graphPlaces" checked> Lugares</label>
+              <button class="btn secondary" id="graphFit" type="button">Resetar zoom</button>
+              <button class="btn hide" id="newLink" type="button">Novo vínculo</button>
+            </div>
+          </div>
+          <div id="graph" aria-hidden="true"></div>
+          <p class="graph-summary" id="graphSummary" aria-live="polite"></p>
+        </section>
+
+        <section class="section">
+          <div class="sectionhead">
+            <div><h2>✦ Vínculos</h2><small>Hierarquia, relações pessoais, negócios e conflitos</small></div>
+            <div class="counter" id="linkCounter"></div>
+          </div>
+          <div class="tablewrap"><table class="inv-table">
+            <thead><tr><th>De</th><th>Vínculo</th><th>Para</th><th>Observação</th><th>Ações</th></tr></thead>
+            <tbody id="links"></tbody>
+          </table></div>
+        </section>
+
         <div class="inv-toolbar no-print">
           <input id="peopleSearch" type="search" placeholder="Buscar pessoa, ocupação, local de trabalho ou grupo…" aria-label="Buscar pessoa">
           <select id="peopleFilter" aria-label="Filtrar pessoas">
@@ -148,8 +198,27 @@
             <div class="counter" id="peopleCounter"></div>
           </div>
           <div class="tablewrap"><table class="inv-table">
-            <thead><tr><th></th><th>Pessoa</th><th>Local de trabalho</th><th>Cidade</th><th>Grupo</th><th>Situação</th><th>Descrição</th><th>Ações</th></tr></thead>
+            <thead><tr><th></th><th>Pessoa</th><th>Trabalho</th><th>Cidade</th><th>Grupo</th><th>Situação</th><th>Descrição</th><th>Ações</th></tr></thead>
             <tbody id="people"></tbody>
+          </table></div>
+        </section>
+      </section>
+
+      <section id="tab-lugares" class="tab-panel hide">
+        <div class="inv-toolbar no-print">
+          <input id="placeSearch" type="search" placeholder="Buscar lugar, categoria ou cidade…" aria-label="Buscar lugar">
+          <select id="placeFilter" aria-label="Filtrar por categoria"></select>
+          <span class="inv-count" id="placeCount"></span>
+          <button class="btn hide" id="newPlace">Novo lugar</button>
+        </div>
+        <section class="section">
+          <div class="sectionhead">
+            <div><h2>✦ Lugares</h2><small>Lojas, saloons, bancos, fazendas, esconderijos e outros pontos de interesse</small></div>
+            <div class="counter" id="placeCounter"></div>
+          </div>
+          <div class="tablewrap"><table class="inv-table">
+            <thead><tr><th></th><th>Lugar</th><th>Cidade</th><th>Endereço / referência</th><th>Quem trabalha</th><th>Situação</th><th>Coordenadas</th><th>Ações</th></tr></thead>
+            <tbody id="places"></tbody>
           </table></div>
         </section>
       </section>
@@ -180,6 +249,7 @@
 </main>
 
 <script src="vendor/leaflet/leaflet.min.js"></script>
+<script src="vendor/vis-network/vis-network.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="admin-shell.js"></script>

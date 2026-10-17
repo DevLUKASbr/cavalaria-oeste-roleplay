@@ -373,3 +373,50 @@ test('Pessoas: cadastro fora de investigação, investigar e encerrar', async ({
   const saved = calls.filter(call => call.payload).map(call => [call.payload.acao, call.payload.alvo?.investigado]);
   expect(saved).toEqual([['salvar-alvo', false], ['salvar-alvo', true], ['salvar-alvo', false]]);
 });
+
+test('Lugares, local de trabalho, vínculos e grafo de Pessoas', async ({ page }) => {
+  const { calls } = await prepare(page);
+  await page.goto('/investigacoes.html');
+  await page.getByRole('tab', { name: 'Lugares', exact: true }).click();
+  await expect(page.locator('#places')).toContainText('Nenhum lugar cadastrado');
+  await page.locator('#newPlace').click();
+  await expect(page.locator('#tCategoria')).toBeVisible();
+  await expect(page.locator('#tOcupacao')).toBeHidden();
+  await page.locator('#tNome').fill('Armazém Fictício');
+  await page.locator('#tCategoria').selectOption('Loja');
+  await page.locator('#tX').fill('-1793');
+  await page.locator('#tY').fill('-386');
+  await page.locator('#saveTarget').click();
+  await expect(page.locator('#places')).toContainText('Armazém Fictício');
+  await expect(page.locator('#targets')).toContainText('Nenhum alvo cadastrado');
+
+  await page.getByRole('tab', { name: 'Pessoas', exact: true }).click();
+  await expect(page.locator('#graph canvas')).toHaveCount(1);
+  for (const [name, workplace] of [['Chefe Fictício', ''], ['Capanga Fictício', 'Armazém Fictício']]) {
+    await page.locator('#newPerson').click();
+    await page.locator('#tNome').fill(name);
+    if (workplace) await page.locator('#tLocalId').selectOption({ label: workplace });
+    await page.locator('#saveTarget').click();
+    await expect(page.locator('#people')).toContainText(name);
+  }
+  await expect(page.locator('#people')).toContainText('Armazém Fictício');
+
+  await page.locator('#newLink').click();
+  await page.locator('#lDe').selectOption({ label: 'Chefe Fictício' });
+  await page.locator('#lTipo').selectOption('Líder/Chefe');
+  await page.locator('#lPara').selectOption({ label: 'Capanga Fictício' });
+  await page.locator('#saveLink').click();
+  await expect(page.locator('#links')).toContainText('Líder/Chefe');
+  await expect(page.locator('#graphSummary')).toContainText('2 pessoas · 1 vínculo');
+
+  await page.getByRole('tab', { name: 'Lugares', exact: true }).click();
+  await expect(page.locator('#places')).toContainText('Capanga Fictício');
+
+  await page.getByRole('tab', { name: 'Pessoas', exact: true }).click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#people tr', { hasText: 'Chefe Fictício' }).locator('[data-action="delete"]').click();
+  await expect(page.locator('#links')).toContainText('Nenhum vínculo cadastrado');
+  expect(calls.filter(call => call.payload).map(call => call.payload.acao))
+    .toEqual(['salvar-alvo', 'salvar-alvo', 'salvar-alvo', 'salvar-vinculo', 'excluir-alvo']);
+  expect(calls.every(call => call.authenticated)).toBe(true);
+});

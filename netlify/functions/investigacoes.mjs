@@ -1,24 +1,32 @@
 /*
  * Netlify Function: investigações (rota /api/investigacoes).
  *
- *   GET  → { alvos, grupos }                                   (permissão 'investigacoes')
- *   POST { acao: 'salvar-alvo',   alvo: {...} }   pessoa ou ponto; sem id = novo ('investigacoes.editar')
- *   POST { acao: 'excluir-alvo',  id }                          ('investigacoes.editar')
- *   POST { acao: 'salvar-grupo',  grupo: {...} }  sem id = novo ('investigacoes.editar')
- *   POST { acao: 'excluir-grupo', id }  (os alvos do grupo ficam sem grupo)
+ *   GET  → { alvos, grupos, vinculos }                                 (permissão 'investigacoes')
+ *   POST { acao: 'salvar-alvo',     alvo: {...} }    pessoa ou lugar; sem id = novo ('investigacoes.editar')
+ *   POST { acao: 'excluir-alvo',    id }             apaga também os vínculos da pessoa
+ *   POST { acao: 'salvar-grupo',    grupo: {...} }
+ *   POST { acao: 'excluir-grupo',   id }             os membros ficam sem grupo
+ *   POST { acao: 'salvar-vinculo',  vinculo: {...} } ligação entre duas pessoas
+ *   POST { acao: 'excluir-vinculo', id }
  *
- * Registro = pessoa (tipo 'Indivíduo') ou ponto de interesse; grupo = bando/organização com território.
- * Pessoa só é "alvo" quando investigado = true (com nível de ameaça); fora disso fica só no
- * cadastro de Pessoas. Pontos de interesse são sempre alvos. Registros antigos, sem o campo
- * investigado, eram todos alvos e continuam sendo.
+ * Registro ("alvo" no armazenamento) = pessoa (tipo 'Indivíduo') ou lugar (tipo 'Ponto de interesse':
+ * loja, saloon, esconderijo…). Pessoa ou lugar só é alvo quando investigado = true (com nível de
+ * ameaça). Registros antigos, sem o campo investigado, eram todos alvos e continuam sendo.
+ * Pessoa pode apontar o grupo (grupo_id) e o lugar onde trabalha (local_id).
  * Coordenadas são as do jogo (x, y); o site converte para o mapa.
- * Sem SQL: arquivos JSON no Supabase Storage, pastas "investigacoes-alvos" e "investigacoes-grupos".
+ * Sem SQL: arquivos JSON no Supabase Storage, pastas "investigacoes-alvos", "investigacoes-grupos"
+ * e "investigacoes-vinculos".
  */
 import { HttpError, json, respond, supabase, authenticate } from '../lib/acesso.mjs';
 import { storage, ID_RE, newId } from '../lib/armazenamento.mjs';
 
 const TIPOS = ['Indivíduo', 'Ponto de interesse'];
 const AMEACAS = ['Baixo', 'Médio', 'Crítico'];
+const CATEGORIAS = ['Loja', 'Saloon', 'Banco', 'Fazenda', 'Estábulo', 'Hotel', 'Esconderijo', 'Outro'];
+const TIPOS_VINCULO = [
+  'Líder/Chefe', 'Sublíder', 'Casal/Romance', 'Família',
+  'Sócio/Parceiro', 'Funcionário de', 'Amizade', 'Rival/Inimigo',
+];
 const COORD_LIMIT = 10000; // o mapa vai de aprox. -7200 a 4200 (x) e -5200 a 4100 (y)
 
 // ---------------------------------------------------------------------------
@@ -46,7 +54,7 @@ function cleanUrl(value) {
   return parsed.href;
 }
 
-// Coordenadas do jogo; ausentes = alvo sem posição no mapa.
+// Coordenadas do jogo; ausentes = sem posição no mapa.
 function cleanCoords(coords) {
   if (coords === null || coords === undefined || coords === '') return null;
   const x = Number(coords.x), y = Number(coords.y);
@@ -57,9 +65,9 @@ function cleanCoords(coords) {
   return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
 }
 
-function cleanOptionalId(id) {
+function cleanOptionalId(id, label) {
   if (id === null || id === undefined || id === '') return null;
-  if (!ID_RE.test(String(id))) throw new HttpError(400, 'Grupo inválido.');
+  if (!ID_RE.test(String(id))) throw new HttpError(400, `${label} inválido.`);
   return String(id);
 }
 
@@ -69,17 +77,20 @@ function cleanId(id, label) {
   return value;
 }
 
-function cleanTarget(a) {
+function cleanRecord(a) {
   const tipo = oneOf(a?.tipo, TIPOS, 'Tipo');
   const isPerson = tipo === 'Indivíduo';
-  const investigado = isPerson ? a?.investigado !== false : true;
+  // Sem o campo = sob investigação (compatível com o site anterior, em que todo cadastro era alvo).
+  const investigado = a?.investigado !== false;
   return {
     nome: str(a?.nome, 80, 'o nome', { required: true }),
     tipo,
+    categoria: isPerson ? null : oneOf(a?.categoria || 'Outro', CATEGORIAS, 'Categoria'),
     foto: cleanUrl(a?.foto),
-    grupo_id: cleanOptionalId(a?.grupo_id),
+    grupo_id: cleanOptionalId(a?.grupo_id, 'Grupo'),
     cidade: str(a?.cidade, 60, 'cidade'),
     ocupacao: isPerson ? str(a?.ocupacao, 80, 'ocupação') : '',
+    local_id: isPerson ? cleanOptionalId(a?.local_id, 'Lugar de trabalho') : null,
     local: str(a?.local, 120, 'local'),
     investigado,
     ameaca: investigado ? oneOf(a?.ameaca, AMEACAS, 'Nível de ameaça') : null,
@@ -95,10 +106,25 @@ const cleanGroup = g => ({
   coords: cleanCoords(g?.coords),
 });
 
+// Vínculo entre duas pessoas que existem. Tipos com direção (Líder/Chefe, Sublíder, Funcionário de)
+// leem-se "de → para": quem comanda → quem é comandado; funcionário → patrão.
+async function cleanLink(v, records) {
+  const de = cleanId(v?.de, 'Pessoa de origem');
+  const para = cleanId(v?.para, 'Pessoa de destino');
+  if (de === para) throw new HttpError(400, 'Escolha duas pessoas diferentes.');
+  const [from, to] = await Promise.all([records.get(de), records.get(para)]);
+  if (from?.tipo !== 'Indivíduo' || to?.tipo !== 'Indivíduo') throw new HttpError(400, 'Vínculos só ligam pessoas cadastradas.');
+  return {
+    de,
+    para,
+    tipo: oneOf(v?.tipo, TIPOS_VINCULO, 'Tipo de vínculo'),
+    obs: str(v?.obs, 300, 'observação'),
+  };
+}
+
 // Cria (sem id) ou atualiza (com id) um registro, preservando autoria e datas.
-async function save(store, input, clean, author, label) {
+async function save(store, input, fields, author, label) {
   const now = new Date().toISOString();
-  const fields = clean(input);
   if (!input?.id) {
     const record = { id: newId(), ...fields, autor: author, criado_em: now, atualizado_em: null, atualizado_por: null };
     await store.put(record);
@@ -122,13 +148,18 @@ export default req => respond(async () => {
   const sb = supabase();
   const caller = await authenticate(req, sb);
   if (!caller.can('investigacoes')) throw new HttpError(403, 'Sem permissão para ver as investigações.');
-  const targets = storage(sb, 'investigacoes-alvos');
+  const records = storage(sb, 'investigacoes-alvos');
   const groups = storage(sb, 'investigacoes-grupos');
+  const links = storage(sb, 'investigacoes-vinculos');
 
   if (req.method === 'GET') {
-    const [alvos, grupos] = await Promise.all([targets.list(), groups.list()]);
+    const [alvos, grupos, vinculos] = await Promise.all([records.list(), groups.list(), links.list()]);
     const byName = (a, b) => a.nome.localeCompare(b.nome, 'pt-BR');
-    return json(200, { alvos: alvos.filter(Boolean).sort(byName), grupos: grupos.filter(Boolean).sort(byName) });
+    return json(200, {
+      alvos: alvos.filter(Boolean).sort(byName),
+      grupos: grupos.filter(Boolean).sort(byName),
+      vinculos: vinculos.filter(Boolean),
+    });
   }
 
   if (!caller.can('investigacoes.editar')) throw new HttpError(403, 'Sua conta não pode alterar investigações.');
@@ -137,20 +168,38 @@ export default req => respond(async () => {
 
   switch (body.acao) {
     case 'salvar-alvo':
-      return json(200, { alvo: await save(targets, body.alvo, cleanTarget, author, 'Alvo') });
-    case 'excluir-alvo':
-      await targets.remove(cleanId(body.id, 'Alvo'));
+      return json(200, { alvo: await save(records, body.alvo, cleanRecord(body.alvo), author, 'Cadastro') });
+
+    case 'excluir-alvo': {
+      const id = cleanId(body.id, 'Cadastro');
+      await records.remove(id);
+      // Sem referências soltas: vínculos da pessoa somem e quem trabalhava no lugar fica sem lugar.
+      const [allLinks, allRecords] = await Promise.all([links.list(), records.list()]);
+      await Promise.all([
+        ...allLinks.filter(l => l && (l.de === id || l.para === id)).map(l => links.remove(l.id)),
+        ...allRecords.filter(r => r?.local_id === id).map(r => records.put({ ...r, local_id: null })),
+      ]);
       return json(200, { ok: true });
+    }
+
     case 'salvar-grupo':
-      return json(200, { grupo: await save(groups, body.grupo, cleanGroup, author, 'Grupo') });
+      return json(200, { grupo: await save(groups, body.grupo, cleanGroup(body.grupo), author, 'Grupo') });
+
     case 'excluir-grupo': {
       const id = cleanId(body.id, 'Grupo');
       await groups.remove(id);
-      // Quem era do grupo fica sem grupo, para não apontar para algo que não existe mais.
-      const members = (await targets.list()).filter(a => a?.grupo_id === id);
-      await Promise.all(members.map(a => targets.put({ ...a, grupo_id: null })));
-      return json(200, { ok: true, alvos_atualizados: members.length });
+      const members = (await records.list()).filter(a => a?.grupo_id === id);
+      await Promise.all(members.map(a => records.put({ ...a, grupo_id: null })));
+      return json(200, { ok: true });
     }
+
+    case 'salvar-vinculo':
+      return json(200, { vinculo: await save(links, body.vinculo, await cleanLink(body.vinculo, records), author, 'Vínculo') });
+
+    case 'excluir-vinculo':
+      await links.remove(cleanId(body.id, 'Vínculo'));
+      return json(200, { ok: true });
+
     default:
       throw new HttpError(400, 'Ação desconhecida.');
   }

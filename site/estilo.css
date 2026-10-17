@@ -169,3 +169,20 @@ body.login-page{min-height:100vh;display:flex;align-items:center;justify-content
 .muted-text{color:#8a7a62;font-style:italic}
 .investigated{display:inline-block;font:700 10px 'Cinzel',serif;text-transform:uppercase;color:#263b2c;margin-right:4px}
 #tab-mapa,#tab-pessoas,#tab-grupos{padding-top:4px}
+
+/* ---------- Investigações: lugares e grafo ---------- */
+.place-marker{display:flex!important;align-items:center;justify-content:center;background:#fbf2df;border:3px solid #b78a3c;border-radius:50%;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.place-marker.critico{border-color:#c0392b}.place-marker.medio{border-color:#e08a1e}.place-marker.baixo{border-color:#2e9e6a}
+.place-glyph{font-style:normal}
+.popup-icon{font-size:40px;line-height:1}
+.graph-box{background:#121916;border:2px solid #8b7149;padding:16px 18px 10px;margin:4px 0 22px;color:#e9dcc0}
+.graph-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.graph-head h2{font:700 18px 'Cinzel',serif;text-transform:uppercase;letter-spacing:1px;margin:0;color:#f6e6c4}
+.graph-head .small{color:#b9ab8e;max-width:720px}
+.graph-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px}
+.graph-actions .btn{min-height:36px;padding:0 14px}
+#graph{height:600px;margin-top:12px;border:1px solid #2c3a32;background:radial-gradient(circle,#1b2620 1px,transparent 1px) 0 0/22px 22px,#0f1512}
+.graph-summary{font-size:12px;color:#b9ab8e;margin:8px 0 0}
+.link-pill{display:inline-block;padding:3px 8px;border:1px solid;background:#fffaf0;font:700 11px Georgia,serif;white-space:nowrap}
+div.vis-tooltip{white-space:pre-line;font:12px Georgia,serif;background:#fbf2df;border:1px solid #8b7149;color:#2d281e}
+@media(max-width:720px){#graph{height:440px}}

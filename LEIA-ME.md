@@ -68,25 +68,40 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 
 ## Investigações
 
-A página tem três abas:
+A página tem quatro abas:
 
 - **Mapa e alvos:** mapa interativo do Oeste com zoom e arraste.
-  - Os alvos aparecem coloridos pelo nível de ameaça (vermelho = Crítico, laranja = Médio, verde = Baixo), e os grupos com o ícone ⌂.
-  - O filtro **Pessoas fora de investigação** mostra também, em cinza, quem está cadastrado mas não é investigado.
+  - Os alvos (pessoas e lugares **sob investigação**) aparecem coloridos pelo nível de ameaça: vermelho = Crítico, laranja = Médio, verde = Baixo.
+  - Lugares aparecem com o ícone da categoria, e grupos com ⌂.
+  - Filtros mostram ou escondem lugares, pessoas fora de investigação (em cinza) e grupos.
   - Abaixo do mapa fica a lista de alvos, com busca e filtros por ameaça e por grupo.
-- **Pessoas:** cadastro de todas as pessoas do Oeste, investigadas ou não. Cada uma tem nome, foto, ocupação, local de trabalho, cidade, grupo, coordenadas e descrição/histórico.
-  - **Investigar** marca a pessoa como alvo, pedindo o nível de ameaça.
-  - **Encerrar** tira a pessoa dos alvos sem apagar o cadastro.
-- **Grupos:** bandos/organizações, com cidade, território no mapa e descrição. Excluir um grupo deixa os membros dele sem grupo.
+- **Pessoas:** grafo, lista de vínculos e cadastro de pessoas.
+  - **Grafo de conspiração e liderança:** as pessoas são círculos (com foto, se houver), que crescem com o número de vínculos e ganham peso extra para **líderes** e **sublíderes**. Grupos (⌂) e lugares aparecem como caixas, ligados por "membro" e "trabalha em". Os nós podem ser arrastados. Há botões de zoom e navegação, e o **Resetar zoom** reenquadra tudo. Clique duas vezes num nó para editar.
+  - **Vínculos** entre pessoas, criados em **Novo vínculo**:
+    - Hierarquia: Líder/Chefe → e Sublíder →
+    - Pessoais: Casal/Romance e Família
+    - Negócios: Sócio/Parceiro e Funcionário de →
+    - Relações: Amizade e Rival/Inimigo
+  - Os tipos com → têm direção: o formulário explica quem vai em "De" e quem vai em "Para".
+  - **Cadastro de pessoas**, investigadas ou não: ocupação, **trabalha em** (um lugar cadastrado), cidade, grupo, coordenadas e descrição. **Investigar** marca a pessoa como alvo (pede o nível de ameaça), e **Encerrar** tira a pessoa dos alvos sem apagar o cadastro.
+- **Lugares:** lojas, saloons, bancos, fazendas, estábulos, hotéis, esconderijos e outros. Cada lugar tem categoria, cidade, endereço/referência, coordenadas e foto, e mostra quem trabalha lá. Um lugar também pode ser investigado (ex.: esconderijo).
+- **Grupos:** bandos e organizações, com cidade, território no mapa e descrição.
 
-**Um cadastro só:** uma pessoa é "alvo" quando está marcada como **sob investigação**, e não existe cadastro duplicado. Pontos de interesse (locais) são sempre alvos. Os alvos criados antes das abas continuam sendo alvos.
+**Um cadastro só:** pessoas e lugares viram "alvo" quando marcados como **sob investigação**, e não existe cadastro duplicado. Os alvos criados antes das abas continuam sendo alvos. O antigo "Ponto de interesse" agora é "Lugar".
+
+**Exclusões não deixam referências soltas:**
+- Excluir uma pessoa apaga também os vínculos dela.
+- Excluir um lugar deixa sem lugar de trabalho quem trabalhava nele.
+- Excluir um grupo deixa os membros sem grupo.
 
 - **Coordenadas:** no formato do jogo (x, y). Dá pra digitar (o ponto aparece no mapa na hora) ou usar **Marcar no mapa** e clicar no lugar. Esc ou clique direito cancela. O botão ⌖ centraliza o item no mapa.
 - **Acesso:** Xerife, Sub-Xerife e Adm leem e editam (permissões `investigacoes` e `investigacoes.editar`). O Membro não acessa.
-- **Mapa base:** imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/) 1.9.4, guardado no próprio site em `site/vendor/leaflet/` (licença BSD-2, sem depender de CDN). A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
+- **Bibliotecas:**
+  - O mapa usa as imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/) 1.9.4. A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
+  - O grafo usa [vis-network](https://visjs.github.io/vis-network/) 9.1.9 (Apache-2.0 ou MIT).
+  - As duas bibliotecas ficam no próprio site, em `site/vendor/`, sem depender de CDN.
 - **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
-- **Onde ficam os dados:** no Supabase Storage, pastas `investigacoes-alvos/` (pessoas e pontos de interesse) e `investigacoes-grupos/`, pela Function `/api/investigacoes`.
-- **Próxima etapa (2):** vínculos entre pessoas (líder/chefe, casal…), linhas no mapa, histórico/diário com datas e grafo de conspiração.
+- **Onde ficam os dados:** no Supabase Storage, pastas `investigacoes-alvos/` (pessoas e lugares), `investigacoes-grupos/` e `investigacoes-vinculos/`, pela Function `/api/investigacoes`.
 
 ## Configurar o Netlify (uma vez)
 
