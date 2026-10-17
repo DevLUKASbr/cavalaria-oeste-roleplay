@@ -65,6 +65,8 @@ async function prepare(page, settings = {}) {
   const calls = [];
   let topics = settings.topics || [];
   let records = [];
+  let targets = [];
+  let groups = [];
   await page.addInitScript(value => { window.__testSettings = value; }, settings);
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -87,6 +89,22 @@ async function prepare(page, settings = {}) {
         if (payload?.acao === 'editar') records = records.map(record => record.id === payload.id ? { ...record, ...payload } : record);
         if (payload?.acao === 'excluir') records = records.filter(record => record.id !== payload.id);
         return route.fulfill({ json: { fichas: records } });
+      }
+      if (url.pathname === '/api/investigacoes') {
+        if (payload?.acao === 'salvar-grupo') {
+          const group = { ...payload.grupo, id: payload.grupo.id || 'fixture-group' };
+          groups = [...groups.filter(item => item.id !== group.id), group];
+        }
+        if (payload?.acao === 'salvar-alvo') {
+          const target = { ...payload.alvo, id: payload.alvo.id || `fixture-target-${targets.length + 1}` };
+          targets = [...targets.filter(item => item.id !== target.id), target];
+        }
+        if (payload?.acao === 'excluir-alvo') targets = targets.filter(item => item.id !== payload.id);
+        if (payload?.acao === 'excluir-grupo') {
+          groups = groups.filter(item => item.id !== payload.id);
+          targets = targets.map(item => (item.grupo_id === payload.id ? { ...item, grupo_id: null } : item));
+        }
+        return route.fulfill({ json: { alvos: targets, grupos: groups } });
       }
     }
     return route.continue();

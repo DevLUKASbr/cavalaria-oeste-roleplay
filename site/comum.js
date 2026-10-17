@@ -46,7 +46,7 @@
     { id: 'contas', href: 'contas.html', title: 'Contas' },
   ];
 
-  const FULL_ACCESS = [...PAGES.map(p => p.id), 'treinamentos.editar', 'recrutamento.editar'];
+  const FULL_ACCESS = [...PAGES.map(p => p.id), 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar'];
   const PERMISSIONS = {
     'Xerife': FULL_ACCESS,
     'Sub-Xerife': FULL_ACCESS,

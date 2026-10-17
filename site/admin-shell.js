@@ -27,7 +27,7 @@
     { id: 'registro', href: 'painel.html', title: 'Registros', subtitle: 'Efetivo, jurisdições e movimentações', icon: 'registro' },
     { id: 'treinamentos', href: 'treinamentos.html', title: 'Treinamentos', subtitle: 'Instruções e materiais da Cavalaria', icon: 'treinamentos' },
     { id: 'recrutamento', href: 'recrutamento.html', title: 'Recrutamento', subtitle: 'Roteiro e fichas de candidatos', icon: 'recrutamento' },
-    { id: 'investigacoes', href: 'investigacoes.html', title: 'Investigações', subtitle: 'Casos e dossiês de RP', icon: 'investigacoes', development: true },
+    { id: 'investigacoes', href: 'investigacoes.html', title: 'Investigações', subtitle: 'Alvos, grupos e mapa de RP', icon: 'investigacoes' },
     { id: 'acoes', href: 'acoes.html', title: 'Ações', subtitle: 'Operações e ocorrências de RP', icon: 'acoes', development: true },
     { id: 'contas', href: 'contas.html', title: 'Contas e permissões', subtitle: 'Gerenciamento dos acessos existentes', icon: 'contas' },
   ];

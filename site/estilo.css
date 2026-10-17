@@ -116,3 +116,49 @@ body.login-page{min-height:100vh;display:flex;align-items:center;justify-content
 .result.bad{color:#8b221b;border-color:#ad4840;background:#f6d5d1}
 .result.wait{color:#6c4b22;border-color:#b89d6a;background:#f3e4c4}
 @media(max-width:720px){.record-header,.form-grid{grid-template-columns:1fr}.announce{flex-direction:column;align-items:stretch}}
+
+/* ---------- Investigações ---------- */
+.inv-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.inv-toolbar input{flex:1;min-width:220px;height:40px;border:1px solid #ab9a76;padding:0 11px;background:#fff7e8;font:13px Georgia,serif}
+.inv-toolbar select{height:40px;border:1px solid #ab9a76;background:#fff7e8;font:13px Georgia,serif;padding:0 8px}
+.inv-toolbar .btn{min-height:40px;padding:0 16px}
+.inv-count{font:700 12px 'Cinzel',serif;color:#5d4c31}
+.inv-legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:12px;color:#5d4c31;margin:0 0 8px}
+.inv-legend label{margin-left:auto;display:flex;gap:6px;align-items:center}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #8b7149;vertical-align:-1px}
+.dot.critico{background:#c0392b}.dot.medio{background:#e08a1e}.dot.baixo{background:#2e9e6a}
+.group-glyph{font-style:normal;font-weight:bold;color:#3d5544}
+.map-wrap{position:relative;border:2px solid #8b7149;box-shadow:0 4px 14px rgba(45,40,30,.25)}
+#map{height:560px;background:#d8c49a}
+#map.picking{cursor:crosshair}
+.pick-hint{position:absolute;left:12px;bottom:12px;z-index:500;background:#172820;color:#f6e6c4;border:1px solid var(--gold);padding:8px 12px;font-size:12px}
+.map-credit{font-size:11px;color:#7a6548;margin:6px 0 18px}
+.group-marker{display:flex!important;align-items:center;justify-content:center;background:#263b2c;color:#f6e6c4;border:2px solid var(--gold);border-radius:6px;font:700 17px Georgia,serif;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.preview-marker{display:flex!important;align-items:center;justify-content:center;color:#8b221b;font:700 26px Georgia,serif;text-shadow:0 0 3px #fff,0 0 6px #fff}
+.inv-popup{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:190px;font:13px Georgia,serif}
+.inv-popup strong{font:700 16px 'Cinzel',serif}
+.inv-popup .btn{margin-top:6px;min-height:30px;font-size:12px}
+.popup-photo{width:180px;height:120px;object-fit:cover;border:2px solid #8b7149;margin-bottom:4px}
+.popup-photo.no-photo{display:none}
+.threat-text{font-weight:bold}.threat-text.critico{color:#c0392b}.threat-text.medio{color:#c47612}.threat-text.baixo{color:#2e8a5e}
+.group-text{color:#3d5544;font-weight:bold}
+.form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.form-grid .wide{grid-column:1/-1}
+.coords-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.coords-row .field{margin:0;flex:1;min-width:130px}
+.coords-row .btn{min-height:44px}
+.inv-table td{vertical-align:middle}
+.table-photo{width:42px;height:42px;object-fit:cover;border:1px solid #8b7149;display:inline-flex;align-items:center;justify-content:center;background:#e9d8b4;font-size:20px}
+.target-name{display:block}.inv-table .name small{display:block;font-weight:normal;color:#7a6548}
+.inv-table .coords{font-family:'Courier New',monospace;white-space:nowrap}
+.inv-table .desc{max-width:260px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.inv-table .row-actions{display:flex;gap:4px}
+.inv-table .row-actions .btn{min-height:30px;min-width:32px;padding:0 8px}
+.threat{display:inline-block;font:700 10px 'Cinzel',serif;text-transform:uppercase;padding:3px 8px;border:1px solid;letter-spacing:.5px}
+.threat.critico{color:#8b221b;border-color:#ad4840;background:#f6d5d1}
+.threat.medio{color:#7a4a0c;border-color:#c48a3c;background:#f8e3c2}
+.threat.baixo{color:#2f5b33;border-color:#7e9c61;background:#dfe9cf}
+.group-pill{display:inline-block;padding:3px 8px;border:1px solid #3d5544;background:#e3ead9;color:#263b2c;font-size:12px;white-space:nowrap}
+@media(max-width:720px){#map{height:420px}.form-grid.three{grid-template-columns:1fr}.inv-legend label{margin-left:0}}
+/* A barra superior do painel é fixa: rolagens automáticas param abaixo dela. */
+#map,#targetEditor,#groupEditor{scroll-margin-top:110px}

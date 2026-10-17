@@ -200,7 +200,7 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 390, height: 844 }
 
 test('módulos futuros são informativos e avisos não inventam contagens', async ({ page }) => {
   await prepare(page);
-  await page.goto('/investigacoes.html');
+  await page.goto('/acoes.html');
   await expect(page.getByRole('heading', { name: 'Em desenvolvimento', exact: true })).toBeVisible();
   await expect(page.locator('.construction form')).toHaveCount(0);
   await expect(page.locator('.sidebar-future a')).toHaveCount(0);
@@ -298,4 +298,45 @@ test('Recrutamento da main preserva roteiro, fichas, candidatos e ações autent
   await expect(page.locator('#records')).toContainText('Nenhuma ficha');
   expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'excluir']);
   expect(calls.every(call => call.authenticated)).toBe(true);
+});
+
+test('Investigações cadastra grupo e alvo com coordenadas, mostra no mapa e na lista', async ({ page }) => {
+  const { calls } = await prepare(page);
+  await page.goto('/investigacoes.html');
+  await expect(page.locator('#map.leaflet-container')).toBeVisible();
+  await expect(page.locator('#targets')).toContainText('Nenhum alvo cadastrado');
+  await page.locator('#newGroup').click();
+  await page.locator('#gNome').fill('Bando de Teste');
+  await page.locator('#gX').fill('2632');
+  await page.locator('#gY').fill('-1312');
+  await page.locator('#saveGroup').click();
+  await expect(page.locator('#groups')).toContainText('Bando de Teste');
+  await expect(page.locator('#map .group-marker')).toHaveCount(1);
+  await page.locator('#newTarget').click();
+  await page.locator('#tNome').fill('Alvo Fictício');
+  await page.locator('#tAmeaca').selectOption('Crítico');
+  await page.locator('#tGrupo').selectOption({ label: 'Bando de Teste' });
+  await page.locator('#tX').fill('2650');
+  await page.locator('#tY').fill('-1290');
+  await page.locator('#saveTarget').click();
+  await expect(page.locator('#targets')).toContainText('Alvo Fictício');
+  await expect(page.locator('#targets')).toContainText('Bando de Teste');
+  await expect(page.locator('#map path.leaflet-interactive')).toHaveCount(1);
+  await page.locator('#threatFilter').selectOption('Baixo');
+  await expect(page.locator('#targets')).toContainText('Nenhum alvo neste filtro');
+  await page.locator('#threatFilter').selectOption('');
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#groups [data-action="delete"]').click();
+  await expect(page.locator('#groups')).toContainText('Nenhum grupo cadastrado');
+  await expect(page.locator('#targets')).toContainText('Alvo Fictício');
+  await expect(page.locator('#targets')).not.toContainText('Bando de Teste');
+  expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['salvar-grupo', 'salvar-alvo', 'excluir-grupo']);
+  expect(calls.every(call => call.authenticated)).toBe(true);
+});
+
+test('Membro não abre Investigações', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro' });
+  await page.goto('/investigacoes.html');
+  await expect(page).toHaveURL(/treinamentos.html$/);
+  await expect(page.locator('.sidebar-nav')).not.toContainText('Investigações');
 });

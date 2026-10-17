@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Investigações · Cavalaria | Oeste Roleplay</title>
   <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.min.css">
   <link rel="stylesheet" href="estilo.css">
   <link rel="stylesheet" href="admin.css">
 </head>
-<body class="admin-page" data-pagina="investigacoes">
+<body class="admin-page">
 <div id="shell"></div>
 <main class="wrap" id="mainContent" tabindex="-1">
   <article class="paper">
@@ -16,16 +17,116 @@
       <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
       <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
       <h1>Investigações</h1>
-      <div class="subtitle">Investigações da Cavalaria · Oeste Roleplay</div>
+      <div class="subtitle">Alvos, grupos e territórios · Oeste Roleplay</div>
       <div class="rule">✦</div>
     </header>
 
     <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
 
     <div id="private" class="hide">
-      <section class="construction">
-        <h2>Em desenvolvimento</h2>
-        <p>Os casos, dossiês e evidências de RP dependem de regras de acesso e armazenamento próprias, que serão aprovadas em uma próxima etapa. Nenhuma investigação é registrada nesta fase.</p>
+      <div class="inv-toolbar no-print">
+        <input id="search" type="search" placeholder="Buscar alvo, grupo, cidade ou local…" aria-label="Buscar">
+        <select id="threatFilter" aria-label="Filtrar por ameaça">
+          <option value="">Todas as ameaças</option>
+          <option value="Crítico">Crítico</option>
+          <option value="Médio">Médio</option>
+          <option value="Baixo">Baixo</option>
+        </select>
+        <select id="groupFilter" aria-label="Filtrar por grupo"></select>
+        <span class="inv-count" id="targetCount"></span>
+        <button class="btn hide" id="newTarget">Novo alvo</button>
+        <button class="btn secondary hide" id="newGroup">Novo grupo</button>
+      </div>
+
+      <div class="inv-legend">
+        <span><i class="dot critico"></i> Crítico</span>
+        <span><i class="dot medio"></i> Médio</span>
+        <span><i class="dot baixo"></i> Baixo</span>
+        <span><i class="group-glyph">⌂</i> Grupo / território</span>
+        <label><input type="checkbox" id="showGroups" checked> Mostrar grupos</label>
+      </div>
+
+      <div class="map-wrap">
+        <div id="map" aria-label="Mapa do Oeste com alvos e grupos"></div>
+        <div id="pickHint" class="pick-hint hide">⌖ Clique no mapa para marcar a posição · Esc ou clique direito para cancelar</div>
+      </div>
+      <p class="map-credit">Mapa: © Rockstar Games. Coordenadas no formato do jogo (x, y).</p>
+
+      <section id="targetEditor" class="panel-box hide">
+        <h2 id="targetEditorTitle">Novo alvo</h2>
+        <form id="targetForm" class="topic-form">
+          <div class="form-grid three">
+            <label class="field"><span>Nome *</span><input id="tNome" maxlength="80" required minlength="2"></label>
+            <label class="field"><span>Tipo</span>
+              <select id="tTipo"><option>Indivíduo</option><option>Ponto de interesse</option></select></label>
+            <label class="field"><span>Nível de ameaça</span>
+              <select id="tAmeaca"><option>Baixo</option><option>Médio</option><option>Crítico</option></select></label>
+            <label class="field"><span>Grupo</span><select id="tGrupo"></select></label>
+            <label class="field"><span>Cidade / região</span><input id="tCidade" maxlength="60" list="cidades"></label>
+            <label class="field"><span>Local</span><input id="tLocal" maxlength="120" placeholder="Ex.: Fazenda, saloon, acampamento…"></label>
+            <label class="field wide"><span>Foto (link https)</span><input id="tFoto" type="url" maxlength="800" placeholder="https://…"></label>
+          </div>
+          <div class="coords-row">
+            <label class="field"><span>Coordenada X</span><input id="tX" type="number" step="any"></label>
+            <label class="field"><span>Coordenada Y</span><input id="tY" type="number" step="any"></label>
+            <button class="btn secondary" type="button" data-pick="t">⌖ Marcar no mapa</button>
+            <button class="btn secondary" type="button" data-clear="t">Sem posição</button>
+          </div>
+          <label class="field"><span>Descrição</span><textarea id="tDescricao" maxlength="3000" placeholder="Quem é, o que faz, observações da investigação…"></textarea></label>
+          <div class="form-actions">
+            <button class="btn" type="submit" id="saveTarget">Salvar alvo</button>
+            <button class="btn secondary" type="button" data-cancel="targetEditor">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="groupEditor" class="panel-box hide">
+        <h2 id="groupEditorTitle">Novo grupo</h2>
+        <form id="groupForm" class="topic-form">
+          <div class="form-grid">
+            <label class="field"><span>Nome do grupo *</span><input id="gNome" maxlength="80" required minlength="2"></label>
+            <label class="field"><span>Cidade / região</span><input id="gCidade" maxlength="60" list="cidades"></label>
+          </div>
+          <div class="coords-row">
+            <label class="field"><span>Território X</span><input id="gX" type="number" step="any"></label>
+            <label class="field"><span>Território Y</span><input id="gY" type="number" step="any"></label>
+            <button class="btn secondary" type="button" data-pick="g">⌖ Marcar no mapa</button>
+            <button class="btn secondary" type="button" data-clear="g">Sem posição</button>
+          </div>
+          <label class="field"><span>Descrição</span><textarea id="gDescricao" maxlength="2000" placeholder="Atividades, área de atuação, observações…"></textarea></label>
+          <div class="form-actions">
+            <button class="btn" type="submit" id="saveGroup">Salvar grupo</button>
+            <button class="btn secondary" type="button" data-cancel="groupEditor">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <datalist id="cidades">
+        <option>Valentine</option><option>Annesburg</option><option>Van Horn</option><option>Emerald Ranch</option>
+        <option>Blackwater</option><option>Strawberry</option><option>Armadillo</option><option>Tumbleweed</option>
+        <option>Rhodes</option><option>Saint Denis</option><option>Lagras</option><option>Colter</option>
+      </datalist>
+
+      <section class="section">
+        <div class="sectionhead">
+          <div><h2>✦ Alvos</h2><small>Pessoas e pontos de interesse sob investigação</small></div>
+          <div class="counter" id="targetCounter"></div>
+        </div>
+        <div class="tablewrap"><table class="inv-table">
+          <thead><tr><th></th><th>Alvo</th><th>Grupo</th><th>Cidade</th><th>Local</th><th>Ameaça</th><th>Coordenadas</th><th>Descrição</th><th>Ações</th></tr></thead>
+          <tbody id="targets"></tbody>
+        </table></div>
+      </section>
+
+      <section class="section">
+        <div class="sectionhead">
+          <div><h2>✦ Grupos e territórios</h2><small>Bandos, organizações e onde atuam</small></div>
+          <div class="counter" id="groupCounter"></div>
+        </div>
+        <div class="tablewrap"><table class="inv-table">
+          <thead><tr><th>Grupo</th><th>Cidade</th><th>Membros</th><th>Território</th><th>Descrição</th><th>Ações</th></tr></thead>
+          <tbody id="groups"></tbody>
+        </table></div>
       </section>
     </div>
 
@@ -36,10 +137,11 @@
   </article>
 </main>
 
+<script src="vendor/leaflet/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="admin-shell.js"></script>
 <script src="comum.js"></script>
-<script src="construcao.js"></script>
+<script src="investigacoes.js"></script>
 </body>
 </html>
