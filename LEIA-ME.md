@@ -17,7 +17,7 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | `painel.html` (Registros) | Xerife, Sub-Xerife, Adm e contas antigas com nível `xerife` | Registro dos oficiais, exonerações, histórico, CSV |
 | `treinamentos.html` | Xerife, Sub-Xerife, Adm (criam e editam) · Membro (só lê) | Tópicos de treinamento com título, subtítulo, descrição e vídeos |
 | `recrutamento.html` | Xerife, Sub-Xerife, Adm | Roteiro do recrutamento e fichas dos candidatos |
-| `investigacoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `investigacoes.html` | Xerife, Sub-Xerife, Adm | Mapa do Oeste com alvos (pessoas e pontos de interesse) e grupos/territórios |
 | `acoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
 | `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
 
@@ -65,6 +65,19 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 - **Fichas de recrutamento:** cada ficha é um recrutamento (data, responsável, auxiliares) com um ou mais candidatos. Para cada candidato: dados pessoais, disponibilidade, qualidades e defeitos, as 3 perguntas pessoais, os testes de caça e natação, as 8 perguntas do questionário, nota (0 a 10), resultado (Pendente, Aprovado, Reprovado) e observações.
 - Fichas podem ser editadas e excluídas por Xerife, Sub-Xerife e Adm. Ficam no Supabase Storage, pasta `recrutamentos/`, como os treinamentos.
 - **Mudar o roteiro:** o texto e as perguntas ficam no início de `site/recrutamento.js`. As respostas são guardadas pela ordem das perguntas. Para mudar a **quantidade** de perguntas, ajuste também `PERSONAL_QUESTIONS` / `PSYCH_QUESTIONS` em `netlify/functions/recrutamentos.mjs`.
+
+## Investigações
+
+- **Mapa interativo** do Oeste com zoom e arraste. Os alvos aparecem coloridos pelo nível de ameaça (vermelho = Crítico, laranja = Médio, verde = Baixo) e os grupos com o ícone ⌂. Clicar abre um cartão com foto, região, ameaça, grupo e coordenadas.
+- **Alvos:** pessoa ou ponto de interesse, com nome, foto (link https), grupo, cidade, local, nível de ameaça, coordenadas e descrição.
+- **Grupos/territórios:** nome, cidade, posição do território e descrição. Excluir um grupo deixa os alvos dele sem grupo.
+- **Coordenadas:** no formato do jogo (x, y). Dá pra digitar (o ponto aparece no mapa na hora) ou usar **Marcar no mapa** e clicar no lugar. Esc ou clique direito cancela.
+- A lista tem busca, filtros por ameaça e por grupo, e o botão ⌖ centraliza o item no mapa.
+- **Acesso:** Xerife, Sub-Xerife e Adm leem e editam (permissões `investigacoes` e `investigacoes.editar`). O Membro não acessa.
+- **Mapa base:** imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/). A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
+- **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
+- Dados no Supabase Storage, pastas `investigacoes-alvos/` e `investigacoes-grupos/`, pela Function `/api/investigacoes`.
+- **Próxima etapa (2):** vínculos entre pessoas (líder/chefe, casal…), linhas no mapa, histórico/diário de cada alvo e grafo de conspiração.
 
 ## Configurar o Netlify (uma vez)
 
