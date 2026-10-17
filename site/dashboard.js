@@ -15,6 +15,7 @@
     ['registro', 'painel.html', 'Consultar efetivo', 'Situação, destinos e registros oficiais', 'registro'],
     ['treinamentos', 'treinamentos.html', 'Ver treinamentos', 'Materiais e instruções disponíveis', 'treinamentos'],
     ['recrutamento', 'recrutamento.html', 'Conduzir recrutamento', 'Roteiro e fichas de candidatos', 'recrutamento'],
+    ['avisos', 'avisos.html', 'Ler avisos', 'Comunicados oficiais do Comando', 'avisos'],
     ['contas', 'contas.html', 'Gerenciar contas', 'Contas individuais e acessos existentes', 'contas'],
   ];
   $('quickActions').innerHTML = shortcuts.filter(([permission]) => can(access, permission)).map(([, href, title, description, glyph]) => `<a href="${href}">${icon(glyph)}<span><strong>${title}</strong><small>${description}</small></span>${icon('arrow')}</a>`).join('');
@@ -89,6 +90,13 @@
     }
   }
   $('refreshDashboard').addEventListener('click', refresh);
+  async function refreshNotices() {
+    $('refreshDashboardNotices').disabled = true;
+    await window.CavalariaLayout.loadAnnouncements($('dashboardNotices'));
+    $('refreshDashboardNotices').disabled = false;
+  }
+  $('refreshDashboardNotices').addEventListener('click', refreshNotices);
+  refreshNotices();
   window.Cavalaria.setHidden('private', false);
   await refresh();
 })();

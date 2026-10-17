@@ -29,6 +29,7 @@
     { id: 'recrutamento', href: 'recrutamento.html', title: 'Recrutamento', subtitle: 'Roteiro e fichas de candidatos', icon: 'recrutamento' },
     { id: 'investigacoes', href: 'investigacoes.html', title: 'Investigações', subtitle: 'Alvos, grupos e mapa de RP', icon: 'investigacoes' },
     { id: 'acoes', href: 'acoes.html', title: 'Ações', subtitle: 'Operações e ocorrências de RP', icon: 'acoes', development: true },
+    { id: 'avisos', href: 'avisos.html', title: 'Avisos', subtitle: 'Comunicados oficiais para a Cavalaria', icon: 'avisos' },
     { id: 'contas', href: 'contas.html', title: 'Contas e permissões', subtitle: 'Gerenciamento dos acessos existentes', icon: 'contas' },
   ];
 
@@ -51,7 +52,6 @@
           </a>`).join('')}</nav>
         <div class="sidebar-future"><div class="sidebar-section-label">PRÓXIMAS ETAPAS</div>
           <div title="Premiações — Em desenvolvimento">${icon('premios')}<span>Premiações<small>Em desenvolvimento</small></span></div>
-          <div title="Avisos — Em desenvolvimento">${icon('avisos')}<span>Avisos<small>Em desenvolvimento</small></span></div>
         </div>
         <div class="sidebar-bottom"><div class="sidebar-user"><strong>${esc(displayName(access.user))}</strong><small>${esc(access.cargo)}</small></div><span class="session-indicator">Sessão individual</span>
           <button id="sidebarCollapse" class="sidebar-collapse" type="button" aria-label="Recolher menu" aria-controls="adminSidebar" aria-expanded="true">${icon('chevron')}<span>Recolher menu</span></button>
@@ -66,7 +66,7 @@
           <button id="passwordToggle" class="icon-button" type="button" aria-label="Trocar minha senha" title="Trocar minha senha">${icon('key')}</button>
           <button id="logout" class="icon-button logout-button" type="button" aria-label="Sair da sessão" title="Sair da sessão">${icon('logout')}</button>
         </div>
-        <div id="notificationsPanel" class="notifications-panel" hidden><strong>Avisos do Alto Comando</strong><p>O módulo de avisos está em desenvolvimento. Não há comunicados disponíveis nesta fase.</p></div>
+        <div id="notificationsPanel" class="notifications-panel" hidden><strong>Avisos do Alto Comando</strong><div id="notificationNotices" role="status" aria-live="polite"></div><a href="avisos.html">Ver todos os avisos</a></div>
       </header>
       <div class="session-status"><span class="status-dot" aria-hidden="true"></span><span id="connection">Sessão verificada</span></div>
       <div class="shell-password">${passwordForm}</div>`;
@@ -136,6 +136,7 @@
       const panel = $('notificationsPanel');
       panel.hidden = !panel.hidden;
       $('notificationsToggle').setAttribute('aria-expanded', String(!panel.hidden));
+      if (!panel.hidden) loadAnnouncements($('notificationNotices'));
     });
     document.addEventListener('click', event => {
       if (!event.target.closest('#notificationsPanel, #notificationsToggle')) {
@@ -146,5 +147,16 @@
     document.title = `${current.title} · Cavalaria | Oeste Roleplay`;
   }
 
-  window.CavalariaLayout = { mount, icon, modules };
+  async function loadAnnouncements(target) {
+    const { api, esc, formatDateTime } = window.Cavalaria;
+    target.textContent = 'Carregando avisos…';
+    try {
+      const { avisos } = await api('avisos');
+      target.innerHTML = avisos.length ? `<ul class="notice-preview">${avisos.slice(0, 3).map(item => `<li><a href="avisos.html"><strong>${esc(item.titulo)}</strong></a><span>${esc(({ urgente: 'Urgente', importante: 'Importante', normal: 'Normal' })[item.prioridade] || 'Normal')} · ${esc(formatDateTime(item.criado_em))}</span></li>`).join('')}</ul>` : '<p>Nenhum aviso publicado pelo Comando.</p>';
+    } catch {
+      target.textContent = 'Não foi possível consultar os avisos. Acesse a aba Avisos para tentar novamente.';
+    }
+  }
+
+  window.CavalariaLayout = { mount, icon, modules, loadAnnouncements };
 })();

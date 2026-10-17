@@ -2,9 +2,9 @@
 
 Painel do Alto Comando para revista de efetivo, avaliação de atividade e controle de exonerações.
 
-- **Site** (pasta `site/`): login, dashboard modular, registros, treinamentos, recrutamento, investigações, ações e contas. HTML/JS puro, sem build.
-- **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage para tópicos de treinamento e fichas de recrutamento).
-- **Netlify**: hospeda o site e roda as Functions `contas`, `treinamentos` e `recrutamentos` (rotas `/api/...`), que usam a chave secreta do Supabase guardada só no Netlify.
+- **Site** (pasta `site/`): login, dashboard modular, registros, treinamentos, recrutamento, investigações, avisos, ações e contas. HTML/JS puro, sem build.
+- **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage privado para os módulos de conteúdo, incluindo avisos).
+- **Netlify**: hospeda o site e roda as Functions `contas`, `treinamentos`, `recrutamentos`, `investigacoes` e `avisos` (rotas `/api/...`), que usam a chave secreta do Supabase guardada só no Netlify.
 
 Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **Ninguém precisa abrir o SQL Editor**: contas, nomes, cargos, senhas e tópicos são gerenciados pelo próprio site.
 
@@ -19,11 +19,22 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 | `recrutamento.html` | Xerife, Sub-Xerife, Adm | Roteiro do recrutamento e fichas dos candidatos |
 | `investigacoes.html` | Xerife, Sub-Xerife, Adm | Mapa do Oeste com alvos (pessoas e pontos de interesse) e grupos/territórios |
 | `acoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `avisos.html` | todos os cargos autorizados leem; Xerife, Sub-Xerife e Adm gerenciam | Publicar, editar, buscar, arquivar e republicar comunicados com prioridade e identificação do autor |
 | `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
 
 O menu de cada pessoa mostra só as páginas que o cargo dela permite. Quem abre uma página sem permissão é levado para a primeira página permitida.
 
-Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML existentes, com sidebar e topbar compartilhadas; a sessão individual continua persistida pelo Supabase. O Dashboard de quem não pode ver Registros não consulta efetivo nem auditoria. Premiações e Avisos são apenas indicações de etapas futuras, sem novas permissões.
+Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML existentes, com sidebar e topbar compartilhadas; a sessão individual continua persistida pelo Supabase. O Dashboard de quem não pode ver Registros não consulta efetivo nem auditoria. Premiações permanece como indicação de etapa futura. Os avisos publicados aparecem no Início, no sino e na aba Avisos.
+
+## Avisos
+
+Xerife, Sub-Xerife e Adm podem publicar título, comunicado em texto simples e prioridade (Normal, Importante ou Urgente). Os mais prioritários aparecem primeiro; entre avisos da mesma prioridade, os mais recentes vêm antes. Membro e contas legadas com Acesso limitado podem ler os publicados, sem acesso aos controles de edição nem ao arquivo.
+
+Arquivar retira o aviso da leitura dos membros e preserva o registro para o Comando, que pode republicá-lo. Autor/data de criação e responsável/data da última alteração são definidos pela Function, sem aceitar autoria enviada pelo navegador. Não há exclusão definitiva nem histórico completo de versões neste módulo.
+
+Os dados ficam em `avisos/<id>.json`, no bucket privado `cavalaria` do Supabase Storage, usando o armazenamento existente. Não é necessário executar SQL, alterar RLS, criar contas ou configurar novas variáveis de ambiente. As permissões `avisos` e `avisos.editar` são verificadas no servidor; as permissões dos módulos anteriores permanecem iguais.
+
+Use **Atualizar avisos** para buscar novas publicações. O sino busca os comunicados ao abrir; não há confirmação de leitura, contador de não lidos, envio de mensagens externas ou atualização automática em tempo real. A validação da persistência real deve ser feita no Deploy Preview com contas de teste autorizadas, antes da aprovação do PR.
 
 O diagnóstico, os testes e as pendências da Fase 1 estão em [`STATUS.md`](STATUS.md) e [`docs/FASE1_DIAGNOSTICO.md`](docs/FASE1_DIAGNOSTICO.md). A implantação segue estática, sem build ou dependências de runtime. Para desenvolver e validar localmente:
 
@@ -44,13 +55,13 @@ Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais a
 | **Xerife** | Sheriff da Cavalaria | todas as páginas |
 | **Sub-Xerife** | Sub-Sheriff | todas as páginas |
 | **Adm** | administra o site (não é cargo do RP) | todas as páginas |
-| **Membro** | demais integrantes | **provisório:** só lê Treinamentos. O acesso definitivo ainda será definido. |
+| **Membro** | demais integrantes | Lê Treinamentos e Avisos publicados; não edita nem acessa dados administrativos. |
 
 O cargo é escolhido em **Contas** e aparece na barra de cima do site.
 
 **Onde as permissões estão definidas:** no mapa `PERMISSOES` de `netlify/lib/acesso.mjs`. É ele que vale de verdade. O `site/comum.js` tem uma cópia só para montar o menu: **mude os dois juntos**. Para mudar o acesso do Membro, basta acrescentar páginas na lista dele, nos dois arquivos.
 
-O registro dos oficiais é protegido também pelo banco: só contas com nível na tabela `cavalaria_membros` leem e editam os registros. Xerife, Sub-Xerife e Adm recebem o nível `admin` (inclui reverter exoneração). O Membro não recebe nível, então não consegue ler o registro nem pela API. Se o Membro um dia ganhar acesso ao registro, também é preciso dar um nível a ele em `NIVEL_DO_CARGO` (`acesso.mjs`). Contas antigas sem cargo aparecem como **Adm** (nível `admin`) ou **Acesso limitado** (nível `xerife`, só o registro).
+O registro dos oficiais é protegido também pelo banco: só contas com nível na tabela `cavalaria_membros` leem e editam os registros. Xerife, Sub-Xerife e Adm recebem o nível `admin` (inclui reverter exoneração). O Membro não recebe nível, então não consegue ler o registro nem pela API. Se o Membro um dia ganhar acesso ao registro, também é preciso dar um nível a ele em `NIVEL_DO_CARGO` (`acesso.mjs`). Contas antigas sem cargo aparecem como **Adm** (nível `admin`) ou **Acesso limitado** (nível `xerife`, acesso ao registro e leitura de Avisos).
 
 ## Treinamentos
 
