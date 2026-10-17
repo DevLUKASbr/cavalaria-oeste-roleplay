@@ -68,16 +68,25 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 
 ## Investigações
 
-- **Mapa interativo** do Oeste com zoom e arraste. Os alvos aparecem coloridos pelo nível de ameaça (vermelho = Crítico, laranja = Médio, verde = Baixo) e os grupos com o ícone ⌂. Clicar abre um cartão com foto, região, ameaça, grupo e coordenadas.
-- **Alvos:** pessoa ou ponto de interesse, com nome, foto (link https), grupo, cidade, local, nível de ameaça, coordenadas e descrição.
-- **Grupos/territórios:** nome, cidade, posição do território e descrição. Excluir um grupo deixa os alvos dele sem grupo.
-- **Coordenadas:** no formato do jogo (x, y). Dá pra digitar (o ponto aparece no mapa na hora) ou usar **Marcar no mapa** e clicar no lugar. Esc ou clique direito cancela.
-- A lista tem busca, filtros por ameaça e por grupo, e o botão ⌖ centraliza o item no mapa.
+A página tem três abas:
+
+- **Mapa e alvos:** mapa interativo do Oeste com zoom e arraste.
+  - Os alvos aparecem coloridos pelo nível de ameaça (vermelho = Crítico, laranja = Médio, verde = Baixo), e os grupos com o ícone ⌂.
+  - O filtro **Pessoas fora de investigação** mostra também, em cinza, quem está cadastrado mas não é investigado.
+  - Abaixo do mapa fica a lista de alvos, com busca e filtros por ameaça e por grupo.
+- **Pessoas:** cadastro de todas as pessoas do Oeste, investigadas ou não. Cada uma tem nome, foto, ocupação, local de trabalho, cidade, grupo, coordenadas e descrição/histórico.
+  - **Investigar** marca a pessoa como alvo, pedindo o nível de ameaça.
+  - **Encerrar** tira a pessoa dos alvos sem apagar o cadastro.
+- **Grupos:** bandos/organizações, com cidade, território no mapa e descrição. Excluir um grupo deixa os membros dele sem grupo.
+
+**Um cadastro só:** uma pessoa é "alvo" quando está marcada como **sob investigação**, e não existe cadastro duplicado. Pontos de interesse (locais) são sempre alvos. Os alvos criados antes das abas continuam sendo alvos.
+
+- **Coordenadas:** no formato do jogo (x, y). Dá pra digitar (o ponto aparece no mapa na hora) ou usar **Marcar no mapa** e clicar no lugar. Esc ou clique direito cancela. O botão ⌖ centraliza o item no mapa.
 - **Acesso:** Xerife, Sub-Xerife e Adm leem e editam (permissões `investigacoes` e `investigacoes.editar`). O Membro não acessa.
 - **Mapa base:** imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/) 1.9.4, guardado no próprio site em `site/vendor/leaflet/` (licença BSD-2, sem depender de CDN). A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
 - **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
-- Dados no Supabase Storage, pastas `investigacoes-alvos/` e `investigacoes-grupos/`, pela Function `/api/investigacoes`.
-- **Próxima etapa (2):** vínculos entre pessoas (líder/chefe, casal…), linhas no mapa, histórico/diário de cada alvo e grafo de conspiração.
+- **Onde ficam os dados:** no Supabase Storage, pastas `investigacoes-alvos/` (pessoas e pontos de interesse) e `investigacoes-grupos/`, pela Function `/api/investigacoes`.
+- **Próxima etapa (2):** vínculos entre pessoas (líder/chefe, casal…), linhas no mapa, histórico/diário com datas e grafo de conspiração.
 
 ## Configurar o Netlify (uma vez)
 

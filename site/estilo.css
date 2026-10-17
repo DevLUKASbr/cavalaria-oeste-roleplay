@@ -162,3 +162,10 @@ body.login-page{min-height:100vh;display:flex;align-items:center;justify-content
 @media(max-width:720px){#map{height:420px}.form-grid.three{grid-template-columns:1fr}.inv-legend label{margin-left:0}}
 /* A barra superior do painel é fixa: rolagens automáticas param abaixo dela. */
 #map,#targetEditor,#groupEditor{scroll-margin-top:110px}
+.investigation-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:4px 0 12px;padding:10px 12px;background:#f3e4c4;border:1px dashed #b89d6a}
+.investigation-row .check{display:flex;gap:8px;align-items:center;font-size:13px;min-height:44px}
+.investigation-row .field{margin:0;min-width:180px}
+.dot.pessoa{background:#7d8a94}
+.muted-text{color:#8a7a62;font-style:italic}
+.investigated{display:inline-block;font:700 10px 'Cinzel',serif;text-transform:uppercase;color:#263b2c;margin-right:4px}
+#tab-mapa,#tab-pessoas,#tab-grupos{padding-top:4px}

@@ -2,12 +2,15 @@
  * Netlify Function: investigações (rota /api/investigacoes).
  *
  *   GET  → { alvos, grupos }                                   (permissão 'investigacoes')
- *   POST { acao: 'salvar-alvo',   alvo: {...} }   sem id = novo ('investigacoes.editar')
+ *   POST { acao: 'salvar-alvo',   alvo: {...} }   pessoa ou ponto; sem id = novo ('investigacoes.editar')
  *   POST { acao: 'excluir-alvo',  id }                          ('investigacoes.editar')
  *   POST { acao: 'salvar-grupo',  grupo: {...} }  sem id = novo ('investigacoes.editar')
  *   POST { acao: 'excluir-grupo', id }  (os alvos do grupo ficam sem grupo)
  *
- * Alvo = pessoa ou ponto de interesse; grupo = bando/organização com território.
+ * Registro = pessoa (tipo 'Indivíduo') ou ponto de interesse; grupo = bando/organização com território.
+ * Pessoa só é "alvo" quando investigado = true (com nível de ameaça); fora disso fica só no
+ * cadastro de Pessoas. Pontos de interesse são sempre alvos. Registros antigos, sem o campo
+ * investigado, eram todos alvos e continuam sendo.
  * Coordenadas são as do jogo (x, y); o site converte para o mapa.
  * Sem SQL: arquivos JSON no Supabase Storage, pastas "investigacoes-alvos" e "investigacoes-grupos".
  */
@@ -66,17 +69,24 @@ function cleanId(id, label) {
   return value;
 }
 
-const cleanTarget = a => ({
-  nome: str(a?.nome, 80, 'o nome', { required: true }),
-  tipo: oneOf(a?.tipo, TIPOS, 'Tipo'),
-  foto: cleanUrl(a?.foto),
-  grupo_id: cleanOptionalId(a?.grupo_id),
-  cidade: str(a?.cidade, 60, 'cidade'),
-  local: str(a?.local, 120, 'local'),
-  ameaca: oneOf(a?.ameaca, AMEACAS, 'Nível de ameaça'),
-  coords: cleanCoords(a?.coords),
-  descricao: str(a?.descricao, 3000, 'descrição'),
-});
+function cleanTarget(a) {
+  const tipo = oneOf(a?.tipo, TIPOS, 'Tipo');
+  const isPerson = tipo === 'Indivíduo';
+  const investigado = isPerson ? a?.investigado !== false : true;
+  return {
+    nome: str(a?.nome, 80, 'o nome', { required: true }),
+    tipo,
+    foto: cleanUrl(a?.foto),
+    grupo_id: cleanOptionalId(a?.grupo_id),
+    cidade: str(a?.cidade, 60, 'cidade'),
+    ocupacao: isPerson ? str(a?.ocupacao, 80, 'ocupação') : '',
+    local: str(a?.local, 120, 'local'),
+    investigado,
+    ameaca: investigado ? oneOf(a?.ameaca, AMEACAS, 'Nível de ameaça') : null,
+    coords: cleanCoords(a?.coords),
+    descricao: str(a?.descricao, 3000, 'descrição'),
+  };
+}
 
 const cleanGroup = g => ({
   nome: str(g?.nome, 80, 'o nome do grupo', { required: true }),

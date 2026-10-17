@@ -24,47 +24,23 @@
     <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
 
     <div id="private" class="hide">
-      <div class="inv-toolbar no-print">
-        <input id="search" type="search" placeholder="Buscar alvo, grupo, cidade ou local…" aria-label="Buscar">
-        <select id="threatFilter" aria-label="Filtrar por ameaça">
-          <option value="">Todas as ameaças</option>
-          <option value="Crítico">Crítico</option>
-          <option value="Médio">Médio</option>
-          <option value="Baixo">Baixo</option>
-        </select>
-        <select id="groupFilter" aria-label="Filtrar por grupo"></select>
-        <span class="inv-count" id="targetCount"></span>
-        <button class="btn hide" id="newTarget">Novo alvo</button>
-        <button class="btn secondary hide" id="newGroup">Novo grupo</button>
-      </div>
-
-      <div class="inv-legend">
-        <span><i class="dot critico"></i> Crítico</span>
-        <span><i class="dot medio"></i> Médio</span>
-        <span><i class="dot baixo"></i> Baixo</span>
-        <span><i class="group-glyph">⌂</i> Grupo / território</span>
-        <label><input type="checkbox" id="showGroups" checked> Mostrar grupos</label>
-      </div>
-
-      <div class="map-wrap">
-        <div id="map" aria-label="Mapa do Oeste com alvos e grupos"></div>
-        <div id="pickHint" class="pick-hint hide">⌖ Clique no mapa para marcar a posição · Esc ou clique direito para cancelar</div>
-      </div>
-      <p class="map-credit">Mapa: © Rockstar Games. Coordenadas no formato do jogo (x, y).</p>
-
       <section id="targetEditor" class="panel-box hide">
         <h2 id="targetEditorTitle">Novo alvo</h2>
         <form id="targetForm" class="topic-form">
           <div class="form-grid three">
             <label class="field"><span>Nome *</span><input id="tNome" maxlength="80" required minlength="2"></label>
             <label class="field"><span>Tipo</span>
-              <select id="tTipo"><option>Indivíduo</option><option>Ponto de interesse</option></select></label>
-            <label class="field"><span>Nível de ameaça</span>
-              <select id="tAmeaca"><option>Baixo</option><option>Médio</option><option>Crítico</option></select></label>
+              <select id="tTipo"><option value="Indivíduo">Pessoa</option><option value="Ponto de interesse">Ponto de interesse</option></select></label>
+            <label class="field" data-person-only><span>Ocupação</span><input id="tOcupacao" maxlength="80" placeholder="Ex.: padeiro, fazendeiro, pistoleiro…"></label>
             <label class="field"><span>Grupo</span><select id="tGrupo"></select></label>
             <label class="field"><span>Cidade / região</span><input id="tCidade" maxlength="60" list="cidades"></label>
-            <label class="field"><span>Local</span><input id="tLocal" maxlength="120" placeholder="Ex.: Fazenda, saloon, acampamento…"></label>
+            <label class="field"><span id="tLocalLabel">Local de trabalho</span><input id="tLocal" maxlength="120" placeholder="Ex.: Padaria de Strawberry, Fazenda Dallas…"></label>
             <label class="field wide"><span>Foto (link https)</span><input id="tFoto" type="url" maxlength="800" placeholder="https://…"></label>
+          </div>
+          <div class="investigation-row">
+            <label class="check" data-person-only><input type="checkbox" id="tInvestigado"> <b>Sob investigação</b> (aparece como alvo no mapa)</label>
+            <label class="field" id="tAmeacaField"><span>Nível de ameaça</span>
+              <select id="tAmeaca"><option>Baixo</option><option>Médio</option><option>Crítico</option></select></label>
           </div>
           <div class="coords-row">
             <label class="field"><span>Coordenada X</span><input id="tX" type="number" step="any"></label>
@@ -72,9 +48,9 @@
             <button class="btn secondary" type="button" data-pick="t">⌖ Marcar no mapa</button>
             <button class="btn secondary" type="button" data-clear="t">Sem posição</button>
           </div>
-          <label class="field"><span>Descrição</span><textarea id="tDescricao" maxlength="3000" placeholder="Quem é, o que faz, observações da investigação…"></textarea></label>
+          <label class="field"><span>Descrição / histórico</span><textarea id="tDescricao" maxlength="3000" placeholder="Quem é, o que faz, observações…"></textarea></label>
           <div class="form-actions">
-            <button class="btn" type="submit" id="saveTarget">Salvar alvo</button>
+            <button class="btn" type="submit" id="saveTarget">Salvar</button>
             <button class="btn secondary" type="button" data-cancel="targetEditor">Cancelar</button>
           </div>
         </form>
@@ -107,26 +83,92 @@
         <option>Rhodes</option><option>Saint Denis</option><option>Lagras</option><option>Colter</option>
       </datalist>
 
-      <section class="section">
-        <div class="sectionhead">
-          <div><h2>✦ Alvos</h2><small>Pessoas e pontos de interesse sob investigação</small></div>
-          <div class="counter" id="targetCounter"></div>
+      <div class="tabs no-print" role="tablist">
+        <button class="tab active" role="tab" data-tab="mapa" aria-selected="true">Mapa e alvos</button>
+        <button class="tab" role="tab" data-tab="pessoas" aria-selected="false">Pessoas</button>
+        <button class="tab" role="tab" data-tab="grupos" aria-selected="false">Grupos</button>
+      </div>
+
+      <section id="tab-mapa" class="tab-panel">
+        <div class="inv-toolbar no-print">
+          <input id="search" type="search" placeholder="Buscar alvo, grupo, cidade ou local…" aria-label="Buscar alvo">
+          <select id="threatFilter" aria-label="Filtrar por ameaça">
+            <option value="">Todas as ameaças</option>
+            <option value="Crítico">Crítico</option>
+            <option value="Médio">Médio</option>
+            <option value="Baixo">Baixo</option>
+          </select>
+          <select id="groupFilter" aria-label="Filtrar por grupo"></select>
+          <span class="inv-count" id="targetCount"></span>
+          <button class="btn hide" id="newTarget">Novo alvo</button>
         </div>
-        <div class="tablewrap"><table class="inv-table">
-          <thead><tr><th></th><th>Alvo</th><th>Grupo</th><th>Cidade</th><th>Local</th><th>Ameaça</th><th>Coordenadas</th><th>Descrição</th><th>Ações</th></tr></thead>
-          <tbody id="targets"></tbody>
-        </table></div>
+
+        <div class="inv-legend">
+          <span><i class="dot critico"></i> Crítico</span>
+          <span><i class="dot medio"></i> Médio</span>
+          <span><i class="dot baixo"></i> Baixo</span>
+          <span><i class="dot pessoa"></i> Pessoa fora de investigação</span>
+          <span><i class="group-glyph">⌂</i> Grupo / território</span>
+          <label><input type="checkbox" id="showPeople"> Pessoas fora de investigação</label>
+          <label><input type="checkbox" id="showGroups" checked> Grupos</label>
+        </div>
+
+        <div class="map-wrap">
+          <div id="map" aria-label="Mapa do Oeste com alvos e grupos"></div>
+          <div id="pickHint" class="pick-hint hide">⌖ Clique no mapa para marcar a posição · Esc ou clique direito para cancelar</div>
+        </div>
+        <p class="map-credit">Mapa: © Rockstar Games. Coordenadas no formato do jogo (x, y).</p>
+
+        <section class="section">
+          <div class="sectionhead">
+            <div><h2>✦ Alvos</h2><small>Pessoas sob investigação e pontos de interesse</small></div>
+            <div class="counter" id="targetCounter"></div>
+          </div>
+          <div class="tablewrap"><table class="inv-table">
+            <thead><tr><th></th><th>Alvo</th><th>Grupo</th><th>Cidade</th><th>Local</th><th>Ameaça</th><th>Coordenadas</th><th>Descrição</th><th>Ações</th></tr></thead>
+            <tbody id="targets"></tbody>
+          </table></div>
+        </section>
       </section>
 
-      <section class="section">
-        <div class="sectionhead">
-          <div><h2>✦ Grupos e territórios</h2><small>Bandos, organizações e onde atuam</small></div>
-          <div class="counter" id="groupCounter"></div>
+      <section id="tab-pessoas" class="tab-panel hide">
+        <div class="inv-toolbar no-print">
+          <input id="peopleSearch" type="search" placeholder="Buscar pessoa, ocupação, local de trabalho ou grupo…" aria-label="Buscar pessoa">
+          <select id="peopleFilter" aria-label="Filtrar pessoas">
+            <option value="">Todas as pessoas</option>
+            <option value="sim">Sob investigação</option>
+            <option value="nao">Fora de investigação</option>
+          </select>
+          <span class="inv-count" id="peopleCount"></span>
+          <button class="btn hide" id="newPerson">Nova pessoa</button>
         </div>
-        <div class="tablewrap"><table class="inv-table">
-          <thead><tr><th>Grupo</th><th>Cidade</th><th>Membros</th><th>Território</th><th>Descrição</th><th>Ações</th></tr></thead>
-          <tbody id="groups"></tbody>
-        </table></div>
+        <section class="section">
+          <div class="sectionhead">
+            <div><h2>✦ Pessoas</h2><small>Cadastro de pessoas do Oeste, investigadas ou não</small></div>
+            <div class="counter" id="peopleCounter"></div>
+          </div>
+          <div class="tablewrap"><table class="inv-table">
+            <thead><tr><th></th><th>Pessoa</th><th>Local de trabalho</th><th>Cidade</th><th>Grupo</th><th>Situação</th><th>Descrição</th><th>Ações</th></tr></thead>
+            <tbody id="people"></tbody>
+          </table></div>
+        </section>
+      </section>
+
+      <section id="tab-grupos" class="tab-panel hide">
+        <div class="inv-toolbar no-print">
+          <span class="inv-count" id="groupCount"></span>
+          <button class="btn hide" id="newGroup">Novo grupo</button>
+        </div>
+        <section class="section">
+          <div class="sectionhead">
+            <div><h2>✦ Grupos e territórios</h2><small>Bandos, organizações e onde atuam</small></div>
+            <div class="counter" id="groupCounter"></div>
+          </div>
+          <div class="tablewrap"><table class="inv-table">
+            <thead><tr><th>Grupo</th><th>Cidade</th><th>Membros</th><th>Território</th><th>Descrição</th><th>Ações</th></tr></thead>
+            <tbody id="groups"></tbody>
+          </table></div>
+        </section>
       </section>
     </div>
 
