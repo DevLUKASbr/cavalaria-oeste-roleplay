@@ -68,6 +68,7 @@ async function prepare(page, settings = {}) {
   let targets = [];
   let groups = [];
   let links = [];
+  let notices = settings.notices || [];
   await page.addInitScript(value => { window.__testSettings = value; }, settings);
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -78,6 +79,15 @@ async function prepare(page, settings = {}) {
       const request = route.request();
       const payload = request.method() === 'POST' ? request.postDataJSON() : null;
       calls.push({ path: url.pathname, payload, authenticated: request.headers().authorization === 'Bearer fixture-session' });
+      if (url.pathname === '/api/avisos') {
+        if (settings.noticesFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao acessar avisos.' } });
+        if (payload && settings.noticeSaveFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao publicar aviso.' } });
+        const author = { nome: 'Morgan West', cargo: settings.cargo || 'Xerife' };
+        if (payload?.acao === 'criar') notices.push({ ...payload, id: 'fixture-notice-' + notices.length, autor: author, criado_em: '2026-10-17T14:00:00Z', arquivado_em: null });
+        if (payload?.acao === 'editar') notices = notices.map(item => item.id === payload.id ? { ...item, ...payload, atualizado_em: '2026-10-17T15:00:00Z', atualizado_por: author } : item);
+        if (payload?.acao === 'arquivar' || payload?.acao === 'restaurar') notices = notices.map(item => item.id === payload.id ? { ...item, arquivado_em: payload.acao === 'arquivar' ? '2026-10-17T15:00:00Z' : null, arquivado_por: author } : item);
+        return route.fulfill({ json: { avisos: notices.filter(item => Boolean(item.arquivado_em) === (url.searchParams.get('arquivados') === '1')) } });
+      }
       if (url.pathname === '/api/contas') return route.fulfill({ json: { contas: [{ id: 'account-test', nome: 'Morgan West', email: 'comando@example.test', cargo: 'Xerife', ultimo_acesso: '2026-10-16T14:00:00Z' }] } });
       if (url.pathname === '/api/treinamentos') {
         if (payload?.acao === 'criar') topics.push({ ...payload, id: 'fixture-topic', criado_em: '2026-10-16T14:00:00Z', autor: { nome: 'Morgan West' } });

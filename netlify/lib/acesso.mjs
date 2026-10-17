@@ -11,15 +11,15 @@
 // este mapa para montar o menu (manter os dois iguais).
 // ---------------------------------------------------------------------------
 
-export const PAGES = ['registro', 'treinamentos', 'recrutamento', 'investigacoes', 'acoes', 'contas'];
-const FULL_ACCESS = [...PAGES, 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar'];
+export const PAGES = ['registro', 'treinamentos', 'recrutamento', 'investigacoes', 'acoes', 'contas', 'avisos'];
+const FULL_ACCESS = [...PAGES, 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar', 'avisos.editar'];
 
 export const PERMISSOES = {
   'Xerife': FULL_ACCESS,
   'Sub-Xerife': FULL_ACCESS,
   'Adm': FULL_ACCESS,
-  'Membro': ['treinamentos'], // provisório: o acesso do Membro ainda será definido
-  'Acesso limitado': ['registro'], // contas antigas com nível 'xerife' e sem cargo
+  'Membro': ['treinamentos', 'avisos'],
+  'Acesso limitado': ['registro', 'avisos'], // contas antigas: leitura dos comunicados
 };
 
 // Cargo → nível em public.cavalaria_membros, a tabela que as regras RLS do registro consultam.

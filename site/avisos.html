@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Avisos · Cavalaria | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-page">
+  <div id="shell"></div>
+  <main id="mainContent" class="wrap" tabindex="-1">
+    <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
+    <div id="private" class="hide">
+      <section class="welcome-card">
+        <div><div class="overline">COMUNICADOS OFICIAIS</div><h2>A voz do Comando</h2><p>Ordens, orientações e novidades para todos os membros da Cavalaria.</p></div>
+      </section>
+      <div class="notice-toolbar">
+        <label class="field"><span>Buscar avisos</span><input id="noticeSearch" type="search" placeholder="Título ou conteúdo…"></label>
+        <label id="archiveField" class="field hide"><span>Exibir</span><select id="noticeStatus"><option value="ativos">Publicados</option><option value="arquivados">Arquivados</option></select></label>
+        <button id="refreshNotices" class="btn secondary" type="button">Atualizar avisos</button>
+        <button id="newNotice" class="btn hide" type="button">Novo aviso</button>
+      </div>
+      <section id="noticeEditor" class="dashboard-card hide" aria-labelledby="editorTitle">
+        <h2 id="editorTitle">Novo aviso</h2>
+        <p>Ao publicar, o comunicado ficará visível para todos os membros autenticados.</p>
+        <form id="noticeForm" class="notice-form">
+          <label class="field"><span>Título *</span><input id="noticeTitle" required minlength="3" maxlength="120"></label>
+          <label class="field"><span>Prioridade</span><select id="noticePriority"><option value="normal">Normal</option><option value="importante">Importante</option><option value="urgente">Urgente</option></select></label>
+          <label class="field"><span>Comunicado *</span><textarea id="noticeContent" required minlength="3" maxlength="5000" rows="7" placeholder="Escreva as orientações para a Cavalaria…"></textarea></label>
+          <div class="form-actions"><button id="saveNotice" class="btn" type="submit">Publicar aviso</button><button id="cancelNotice" class="btn secondary" type="button">Cancelar</button></div>
+        </form>
+      </section>
+      <p id="noticeState" class="dashboard-state" role="status" aria-live="polite"></p>
+      <div id="noticeList" class="notice-list" aria-busy="false"></div>
+    </div>
+    <noscript><p class="system-msg error">Ative o JavaScript para ler os avisos.</p></noscript>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="admin-shell.js"></script>
+  <script src="comum.js"></script>
+  <script src="avisos.js"></script>
+</body>
+</html>

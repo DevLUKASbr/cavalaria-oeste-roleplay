@@ -1,4 +1,56 @@
-# STATUS — Painel modular da Cavalaria
+# STATUS — Avisos da Cavalaria
+
+Data: 17/10/2026 (America/Bahia). Branch: `feature/avisos-cavalaria`, criada da `main` oficial em `ebb3d93`.
+
+Implementação concluída localmente, aguardando revisão do PR e homologação no Deploy Preview. Nenhum merge ou deploy de produção foi executado nesta tarefa.
+
+## Entrega atual
+
+- Aba **Avisos** na sidebar, acessível a todas as contas autorizadas, incluindo Membro e Acesso limitado legado.
+- Xerife, Sub-Xerife e Adm podem publicar e editar título, comunicado e prioridade (Normal, Importante ou Urgente), arquivar e republicar. A autorização de cada operação é verificada na Netlify Function.
+- Publicados ordenados por prioridade e, em seguida, data de criação; busca por título/conteúdo, atualização manual, confirmação antes de arquivar/republicar, estados de carregamento/vazio/falha e preservação do formulário em erro de publicação.
+- Membro e Acesso limitado têm apenas leitura dos publicados, sem acesso aos arquivados. O arquivo fica disponível ao Comando e não há exclusão definitiva.
+- Início e sino da topbar mostram até três comunicados publicados, com acesso à lista completa. O sino consulta ao abrir; o Início e a aba têm atualização manual.
+- Conteúdo em texto simples escapado, com quebras de linha e palavras longas legíveis em dispositivos móveis. Campos e limites validados também no backend.
+- Identidade do autor, cargo, data de criação e responsável/data da última alteração vêm da sessão validada no servidor. Arquivados também identificam quem os arquivou.
+
+## Arquivos desta entrega
+
+| Arquivos | Alteração |
+| --- | --- |
+| `site/avisos.html`, `site/avisos.js` | nova página, formulário de publicação, leitura, busca e gestão |
+| `netlify/functions/avisos.mjs` | API autenticada `/api/avisos`, validação e persistência privada |
+| `netlify/lib/acesso.mjs`, `site/comum.js` | adição sincronizada de `avisos` e `avisos.editar`, sem mudar permissões anteriores |
+| `site/admin-shell.js`, `site/admin.css` | navegação, sino com dados reais e estilos responsivos |
+| `site/dashboard.html`, `site/dashboard.js` | comunicados reais e atalho Avisos no Início |
+| `tests/avisos.test.cjs` | autorização real do handler, validação, autoria, arquivo, ordenação e falha de persistência com HTTP simulado |
+| `tests/browser/avisos.spec.cjs`, `tests/browser/fixtures.cjs`, `tests/browser/admin.spec.cjs` | fluxos em Chromium, papéis, segurança de texto, erros e regressões |
+| `LEIA-ME.md`, `STATUS.md` | instruções, limites, testes e homologação |
+
+## Validação atual
+
+- `npm test`: **40 testes aprovados**, incluindo 11 novos testes da Function Avisos, além de autenticação, sessões e paridade das permissões frontend/backend.
+- `npm run test:e2e`: **34 testes Chromium aprovados**, incluindo 8 novos testes de Avisos e regressões dos módulos existentes.
+- Responsividade: 320, 390, 768, 844 e 1440 px; Avisos também validado com formulário aberto e conteúdo longo. Capturas desktop/mobile revisadas localmente, em `test-results/` ignorado pelo Git.
+- HTML5 estrito e IDs únicos em Avisos e Dashboard, sintaxe CSS e `node --check` nos 10 scripts alterados/adicionados.
+- Login, configuração pública Supabase, SQL/RLS/RPCs, gerenciamento de contas, scripts dos módulos anteriores e Functions anteriores permanecem idênticos à base. A única ampliação de permissões é a do novo módulo de Avisos.
+- Revisão do diff sem credenciais secretas ou arquivos temporários incluídos; `git diff --check` aprovado.
+
+## Armazenamento e limites
+
+Reutiliza `netlify/lib/armazenamento.mjs`, com objetos JSON em `avisos/<id>.json` no bucket privado `cavalaria`. Nenhuma variável de ambiente nova, tabela ou política RLS. A primeira gravação pode criar o bucket privado, conforme o comportamento já existente.
+
+Não inclui confirmação de leitura, contador de não lidos, envio externo, atualização em tempo real, agendamento, anexos ou histórico completo de revisões. Os metadados mostram criação e última alteração, não uma trilha imutável de todas as versões. O armazenamento compartilhado lista até 1.000 objetos por pasta; paginação de volumes maiores fica pendente.
+
+## Homologação pendente
+
+1. No Deploy Preview, publicar um comunicado com uma conta de teste do Comando e conferir leitura em outra sessão de Membro.
+2. Validar persistência após recarregar, edição, prioridade, arquivamento e republicação no Supabase real. Testes locais usaram exclusivamente dados e serviços simulados.
+3. Aprovar o PR manualmente antes de qualquer merge ou publicação em produção. Nenhum aviso foi inserido em contas ou dados reais por esta tarefa.
+
+---
+
+# Histórico — Painel modular, Fase 1 (relatório original)
 
 Data: 16/10/2026 (America/Bahia). Fase: **1 — implementada e validada localmente; aguardando revisão e homologação**.
 

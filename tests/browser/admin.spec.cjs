@@ -35,7 +35,7 @@ test('Membro só vê módulos existentes autorizados e não consulta Registros',
   await prepare(page, { cargo: 'Membro' });
   await page.goto('/dashboard.html');
   await expect(page.getByRole('heading', { name: 'Bem-vindo, Morgan West' })).toBeVisible();
-  await expect(page.locator('.sidebar-nav a')).toHaveCount(2);
+  await expect(page.locator('.sidebar-nav a')).toHaveCount(3);
   await expect(page.locator('#dashboardState')).toContainText('restritos');
   const tables = await page.evaluate(() => window.__mock.calls.map(call => call.table));
   expect(tables).not.toContain('cavalaria_oficiais');
@@ -47,7 +47,7 @@ test('Membro só vê módulos existentes autorizados e não consulta Registros',
 
 test('rotas internas sem sessão voltam ao login', async ({ page }) => {
   await prepare(page, { noSession: true });
-  for (const route of ['dashboard.html', 'painel.html', 'contas.html', 'treinamentos.html']) {
+  for (const route of ['dashboard.html', 'painel.html', 'contas.html', 'treinamentos.html', 'avisos.html']) {
     await page.goto('/' + route);
     await expect(page).toHaveURL(/index.html$/);
     await expect(page.locator('#loginForm')).toBeVisible();
@@ -185,7 +185,7 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 390, height: 844 }
     await expect(page.locator('tr[data-id]')).toHaveCount(5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.locator('.tablewrap').first().evaluate(node => node.scrollWidth >= node.clientWidth)).toBe(true);
-    for (const route of ['contas.html', 'treinamentos.html', 'recrutamento.html']) {
+    for (const route of ['contas.html', 'treinamentos.html', 'recrutamento.html', 'avisos.html']) {
       await page.goto('/' + route);
       await expect(page.locator('#private')).toBeVisible();
       const geometry = await page.evaluate(() => ({
@@ -198,14 +198,15 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 390, height: 844 }
   });
 }
 
-test('módulos futuros são informativos e avisos não inventam contagens', async ({ page }) => {
+test('módulos futuros são informativos e sino consulta avisos reais', async ({ page }) => {
   await prepare(page);
   await page.goto('/acoes.html');
   await expect(page.getByRole('heading', { name: 'Em desenvolvimento', exact: true })).toBeVisible();
   await expect(page.locator('.construction form')).toHaveCount(0);
   await expect(page.locator('.sidebar-future a')).toHaveCount(0);
   await page.getByRole('button', { name: 'Avisos oficiais', exact: true }).click();
-  await expect(page.locator('#notificationsPanel')).toContainText('Não há comunicados disponíveis');
+  await expect(page.locator('#notificationsPanel')).toContainText('Nenhum aviso publicado');
+  await expect(page.locator('#notificationsPanel a')).toHaveAttribute('href', 'avisos.html');
 });
 
 test('Contas preserva criação individual, edição e redefinição via Function autenticada', async ({ page }) => {
@@ -258,7 +259,7 @@ test('rotas administrativas sem erros de runtime e capturas para revisão visual
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1050 });
-  for (const route of ['dashboard.html', 'painel.html', 'contas.html', 'treinamentos.html', 'recrutamento.html', 'investigacoes.html', 'acoes.html']) {
+  for (const route of ['dashboard.html', 'painel.html', 'contas.html', 'treinamentos.html', 'recrutamento.html', 'investigacoes.html', 'acoes.html', 'avisos.html']) {
     await page.goto('/' + route);
     await expect(page.locator('.sidebar-nav a[aria-current="page"]')).toHaveCount(1);
     await expect(page.locator('#private')).toBeVisible();

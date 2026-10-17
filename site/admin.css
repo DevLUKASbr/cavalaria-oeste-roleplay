@@ -245,6 +245,31 @@ body.admin-page {
 @media (prefers-reduced-motion: reduce) {
   .admin-page *, .admin-page *::before, .admin-page *::after { transition: none !important; scroll-behavior: auto !important; }
 }
+.notice-toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin: 24px 0; }
+.notice-toolbar .field:first-child { flex: 1 1 220px; }
+.notice-toolbar .field { margin: 0; min-width: 0; }
+.notice-form { display: grid; gap: 18px; }
+.notice-form textarea { display: block; width: 100%; min-height: 160px; resize: vertical; padding: 12px; border: 1px solid #c5cebd; background: #fffefa; color: #263b31; font-size: 14px; line-height: 1.6; }
+.notice-list { display: grid; gap: 18px; }
+.notice-card { border-top: 3px solid #ba8c3b; min-width: 0; }
+.notice-card h2 { font-size: 22px; margin: 14px 0; overflow-wrap: anywhere; }
+.notice-heading { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.notice-priority { display: inline-block; padding: 4px 10px; border: 1px solid #d3d9ca; border-radius: 5px; color: #294c38; background: #edf3e8; font-size: 11px; font-weight: bold; }
+.notice-priority.importante { color: #745014; background: #fff3d5; border-color: #e4ca8c; }
+.notice-priority.urgente { color: #8c2924; background: #fbe8e5; border-color: #e9b6ac; }
+.notice-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.75; }
+.notice-meta { color: #5b6855; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; border-top: 1px solid #e1e3d9; padding-top: 14px; }
+.notice-card .form-actions { margin-top: 18px; flex-wrap: wrap; }
+.notice-preview { padding: 0; margin: 14px 0; list-style: none; }
+.notice-preview li { padding: 12px 0; border-bottom: 1px solid #e1e3d9; overflow-wrap: anywhere; }
+.notice-preview a { color: #294c38; }
+.notice-preview span { display: block; font-size: 11px; color: #5b6855; margin-top: 5px; }
+#noticeEditor { margin-bottom: 20px; }
+@media (max-width: 600px) {
+  .notice-toolbar > .btn { flex: 1 1 140px; }
+  .notice-toolbar .field { flex: 1 1 100%; }
+  .notice-form .form-actions { flex-wrap: wrap; }
+}
 @media print {
   body.admin-page { background: #fff; }
   .admin-page #shell, .admin-page .skip-link { display: none !important; }
