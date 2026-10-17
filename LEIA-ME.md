@@ -74,7 +74,7 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 - **Coordenadas:** no formato do jogo (x, y). Dá pra digitar (o ponto aparece no mapa na hora) ou usar **Marcar no mapa** e clicar no lugar. Esc ou clique direito cancela.
 - A lista tem busca, filtros por ameaça e por grupo, e o botão ⌖ centraliza o item no mapa.
 - **Acesso:** Xerife, Sub-Xerife e Adm leem e editam (permissões `investigacoes` e `investigacoes.editar`). O Membro não acessa.
-- **Mapa base:** imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/). A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
+- **Mapa base:** imagens oficiais do mapa interativo da Rockstar (`s.rsg.sc`), carregadas com [Leaflet](https://leafletjs.com/) 1.9.4, guardado no próprio site em `site/vendor/leaflet/` (licença BSD-2, sem depender de CDN). A conversão de coordenadas usa a mesma fórmula do mapa da comunidade [RDR2CollectorsMap](https://github.com/jeanropke/RDR2CollectorsMap) (domínio público).
 - **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
 - Dados no Supabase Storage, pastas `investigacoes-alvos/` e `investigacoes-grupos/`, pela Function `/api/investigacoes`.
 - **Próxima etapa (2):** vínculos entre pessoas (líder/chefe, casal…), linhas no mapa, histórico/diário de cada alvo e grafo de conspiração.
