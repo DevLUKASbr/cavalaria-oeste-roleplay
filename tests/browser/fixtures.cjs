@@ -67,6 +67,7 @@ async function prepare(page, settings = {}) {
   let records = [];
   let targets = [];
   let groups = [];
+  let links = [];
   await page.addInitScript(value => { window.__testSettings = value; }, settings);
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -99,12 +100,20 @@ async function prepare(page, settings = {}) {
           const target = { ...payload.alvo, id: payload.alvo.id || `fixture-target-${targets.length + 1}` };
           targets = [...targets.filter(item => item.id !== target.id), target];
         }
-        if (payload?.acao === 'excluir-alvo') targets = targets.filter(item => item.id !== payload.id);
+        if (payload?.acao === 'excluir-alvo') {
+          targets = targets.filter(item => item.id !== payload.id).map(item => (item.local_id === payload.id ? { ...item, local_id: null } : item));
+          links = links.filter(link => link.de !== payload.id && link.para !== payload.id);
+        }
+        if (payload?.acao === 'salvar-vinculo') {
+          const link = { ...payload.vinculo, id: payload.vinculo.id || `fixture-link-${links.length + 1}` };
+          links = [...links.filter(item => item.id !== link.id), link];
+        }
+        if (payload?.acao === 'excluir-vinculo') links = links.filter(link => link.id !== payload.id);
         if (payload?.acao === 'excluir-grupo') {
           groups = groups.filter(item => item.id !== payload.id);
           targets = targets.map(item => (item.grupo_id === payload.id ? { ...item, grupo_id: null } : item));
         }
-        return route.fulfill({ json: { alvos: targets, grupos: groups } });
+        return route.fulfill({ json: { alvos: targets, grupos: groups, vinculos: links } });
       }
     }
     return route.continue();
