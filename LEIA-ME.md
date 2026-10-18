@@ -95,7 +95,7 @@ A página tem quatro abas:
     - Relações: Amizade e Rival/Inimigo
   - Os tipos com → têm direção: o formulário explica quem vai em "De" e quem vai em "Para".
   - **Cadastro de pessoas**, investigadas ou não: ocupação, **trabalha em** (um lugar cadastrado), cidade, grupo, coordenadas e descrição. **Investigar** marca a pessoa como alvo (pede o nível de ameaça), e **Encerrar** tira a pessoa dos alvos sem apagar o cadastro.
-- **Lugares:** lojas, saloons, bancos, fazendas, estábulos, hotéis, esconderijos e outros. Cada lugar tem categoria, cidade, endereço/referência, coordenadas e foto, e mostra quem trabalha lá. Um lugar também pode ser investigado (ex.: esconderijo).
+- **Lugares:** lojas, saloons, bancos, fazendas, estábulos, hotéis, hospitais, reservas indígenas, esconderijos e outros. Cada lugar tem categoria, cidade, endereço/referência, coordenadas e foto, e mostra quem trabalha lá. Um lugar também pode ser investigado (ex.: esconderijo).
 - **Grupos:** bandos e organizações, com cidade, território no mapa e descrição.
 
 **Um cadastro só:** pessoas e lugares viram "alvo" quando marcados como **sob investigação**, e não existe cadastro duplicado. Os alvos criados antes das abas continuam sendo alvos. O antigo "Ponto de interesse" agora é "Lugar".

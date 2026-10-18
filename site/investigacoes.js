@@ -28,7 +28,8 @@
 
   const CATEGORIES = {
     'Loja': '🏪', 'Saloon': '🍺', 'Banco': '🏦', 'Fazenda': '🌾',
-    'Estábulo': '🐎', 'Hotel': '🛏️', 'Esconderijo': '⛺', 'Outro': '📍',
+    'Estábulo': '🐎', 'Hotel': '🛏️', 'Hospital': '🏥', 'Reserva Indígena': '🪶',
+    'Esconderijo': '⛺', 'Outro': '📍',
   };
 
   // dir: o vínculo tem sentido ("de" → "para"); leader: peso extra no grafo para quem está em "de".
