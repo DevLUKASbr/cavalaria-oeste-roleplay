@@ -22,7 +22,7 @@ import { storage, ID_RE, newId } from '../lib/armazenamento.mjs';
 
 const TIPOS = ['Indivíduo', 'Ponto de interesse'];
 const AMEACAS = ['Baixo', 'Médio', 'Crítico'];
-const CATEGORIAS = ['Loja', 'Saloon', 'Banco', 'Fazenda', 'Estábulo', 'Hotel', 'Esconderijo', 'Outro'];
+const CATEGORIAS = ['Loja', 'Saloon', 'Banco', 'Fazenda', 'Estábulo', 'Hotel', 'Hospital', 'Reserva Indígena', 'Esconderijo', 'Outro'];
 const TIPOS_VINCULO = [
   'Líder/Chefe', 'Sublíder', 'Casal/Romance', 'Família',
   'Sócio/Parceiro', 'Funcionário de', 'Amizade', 'Rival/Inimigo',
@@ -41,7 +41,7 @@ function str(value, max, label, { required = false } = {}) {
 }
 
 function oneOf(value, allowed, label) {
-  if (!allowed.includes(value)) throw new HttpError(400, `${label} inválido.`);
+  if (!allowed.includes(value)) throw new HttpError(400, `${label}: valor inválido.`);
   return value;
 }
 
@@ -67,7 +67,7 @@ function cleanCoords(coords) {
 
 function cleanOptionalId(id, label) {
   if (id === null || id === undefined || id === '') return null;
-  if (!ID_RE.test(String(id))) throw new HttpError(400, `${label} inválido.`);
+  if (!ID_RE.test(String(id))) throw new HttpError(400, `${label}: valor inválido.`);
   return String(id);
 }
 
