@@ -4,10 +4,13 @@ Painel do Alto Comando para revista de efetivo, avaliação de atividade e contr
 
 - **Site** (pasta `site/`): login, dashboard modular, registros, treinamentos, recrutamento, investigações, avisos, ações e contas. HTML/JS puro, sem build.
 - **Banco**: Supabase (Postgres com regras RLS + Realtime para o registro; Storage privado para os módulos de conteúdo, incluindo avisos).
-- **Netlify**: hospeda o site e roda as Functions `contas`, `treinamentos`, `recrutamentos`, `investigacoes` e `avisos` (rotas `/api/...`), que usam a chave secreta do Supabase guardada só no Netlify.
+- **Cloudflare Pages + Supabase Edge Functions**: nova arquitetura. A Cloudflare publica as páginas e encaminha `/api/...` à função `cavalaria-api`; a chave administrativa fica no próprio Supabase. Os adaptadores Netlify permanecem disponíveis durante a transição.
 
 Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fez cada alteração. **Ninguém precisa abrir o SQL Editor**: contas, nomes, cargos, senhas e tópicos são gerenciados pelo próprio site.
 
+## Publicação na Cloudflare
+
+A migração para Cloudflare Pages + Supabase foi preparada. O guia de cadastro, publicação da API, conexão ao GitHub e validação está em [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A entrada em produção depende de configurar as contas dos provedores e homologar o novo endereço.
 ## Páginas
 
 | Página | Quem acessa | O que faz |
@@ -114,7 +117,7 @@ A página tem quatro abas:
 - **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
 - **Onde ficam os dados:** no Supabase Storage, pastas `investigacoes-alvos/` (pessoas e lugares), `investigacoes-grupos/` e `investigacoes-vinculos/`, pela Function `/api/investigacoes`.
 
-## Configurar o Netlify (uma vez)
+## Hospedagem anterior: configurar o Netlify
 
 O `netlify.toml` já diz ao Netlify o que publicar (`site/`) e onde estão as Functions. Falta só:
 
