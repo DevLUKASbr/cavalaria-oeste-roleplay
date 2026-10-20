@@ -1,6 +1,6 @@
 # Migração Cloudflare Pages + Supabase — 20/10/2026
 
-Código preparado na branch `feat/migracao-cloudflare-supabase`, criada da `main` em `73234e9`. A publicação real ainda depende da conta Cloudflare, autorização do repositório e deploy da Edge Function no projeto Supabase existente. Nenhuma alteração em tabelas, contas, políticas RLS ou dados reais foi executada.
+**Publicado em https://cavalaria-oeste-roleplay.pages.dev/**. O PR #15 foi integrado à `main` em `5e13cff`; o primeiro deploy Cloudflare foi `9b9474cb-22ba-428c-a674-1466ea31a199`. A integração GitHub foi autorizada somente para este repositório, com publicação automática da `main`. A função `cavalaria-api` foi publicada no projeto Supabase existente. Nenhuma alteração em tabelas, contas, políticas RLS ou dados reais foi executada.
 
 - Páginas publicadas a partir de `site/`, com Functions apenas em `/api/*`, cabeçalhos de proteção e mesma origem para as chamadas do navegador.
 - Cloudflare encaminha somente a sessão da conta; a chave administrativa fica na API Supabase. As regras de cargo são reutilizadas e verificadas no servidor.
@@ -8,9 +8,9 @@ Código preparado na branch `feat/migracao-cloudflare-supabase`, criada da `main
 - Edge Function `cavalaria-api`, pacote único para deploy pelo editor, configuração Pages em `wrangler.toml` e workflow opcional para atualizações da API pelo GitHub.
 - Arquitetura evita o limite de 50 subrequisições externas do Workers Free: a Cloudflare faz uma chamada por operação; a leitura dos registros ocorre no Supabase.
 
-Validação: **53 testes de servidor** e **37 testes Chromium** aprovados; builds Edge e Cloudflare compilados; prévia Wrangler real com páginas 200, API sem sessão 401, rota desconhecida 404 e cabeçalhos conferidos. Chamadas autenticadas e gravações foram verificadas com HTTP/dados simulados. A API real e o endereço público novo ainda precisam de homologação.
+Validação: **53 testes de servidor** e **37 testes Chromium** aprovados; builds Edge e Cloudflare compilados; prévia Wrangler real com páginas 200, API sem sessão 401, rota desconhecida 404 e cabeçalhos conferidos. Em produção, login, Avisos, CSS e JavaScript retornaram 200; as cinco rotas da API retornaram 401 sem sessão; token inválido foi encaminhado à API e rejeitado. O proprietário entrou com sua conta real de administrador: Início carregou os dados existentes, Avisos carregou a lista vazia sem erro de servidor e Criar aviso abriu o editor com a autoria correta. As gravações e os demais cargos foram verificados com HTTP/dados simulados; nenhum aviso fictício foi publicado no ambiente real.
 
-Guia: [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A automação da API requer cadastrar `SUPABASE_ACCESS_TOKEN` diretamente nos secrets de Actions do GitHub; é possível fazer o primeiro deploy pelo editor Supabase sem criar esse token. Cotas gratuitas dos provedores e limite existente de 1.000 objetos por pasta continuam aplicáveis.
+Guia: [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A automação da API ainda requer cadastrar `SUPABASE_ACCESS_TOKEN` diretamente nos secrets de Actions do GitHub; até lá, publicar alterações da função pelo editor Supabase. Atualizações das páginas já são automáticas na Cloudflare. Cotas gratuitas dos provedores e limite existente de 1.000 objetos por pasta continuam aplicáveis.
 
 ---
 # Atualização do mural de Avisos — 20/10/2026

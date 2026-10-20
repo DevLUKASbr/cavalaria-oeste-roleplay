@@ -10,7 +10,10 @@ Cada oficial entra com a própria conta, e o histórico mostra o nome de quem fe
 
 ## Publicação na Cloudflare
 
-A migração para Cloudflare Pages + Supabase foi preparada. O guia de cadastro, publicação da API, conexão ao GitHub e validação está em [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A entrada em produção depende de configurar as contas dos provedores e homologar o novo endereço.
+O painel está publicado em **https://cavalaria-oeste-roleplay.pages.dev/** desde 20/10/2026. A Cloudflare acompanha a branch `main` deste repositório e publica as páginas automaticamente após novos merges. A API `cavalaria-api` está publicada no projeto Supabase existente; contas, senhas e dados foram preservados. No novo domínio, é necessário entrar novamente.
+
+O guia de publicação e manutenção está em [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A automação de atualizações da API é separada: requer o secret `SUPABASE_ACCESS_TOKEN` no GitHub. Enquanto ele não estiver configurado, alterações da API devem ser publicadas pelo editor do Supabase; alterações das páginas continuam automáticas na Cloudflare.
+
 ## Páginas
 
 | Página | Quem acessa | O que faz |
