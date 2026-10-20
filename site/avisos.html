@@ -7,36 +7,61 @@
   <link rel="icon" href="logo-oeste.png">
   <link rel="stylesheet" href="estilo.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="avisos.css">
 </head>
-<body class="admin-page">
+<body class="admin-page notices-page">
   <div id="shell"></div>
   <main id="mainContent" class="wrap" tabindex="-1">
     <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
     <div id="private" class="hide">
-      <section class="welcome-card">
-        <div><div class="overline">COMUNICADOS OFICIAIS</div><h2>A voz do Comando</h2><p>Ordens, orientações e novidades para todos os membros da Cavalaria.</p></div>
+      <section class="notice-hero" aria-labelledby="muralTitle">
+        <div class="notice-hero-copy">
+          <div class="notice-eyebrow"><span></span> CENTRAL DE COMUNICAÇÃO</div>
+          <h2 id="muralTitle">Toda a Cavalaria.<br>Na mesma direção.</h2>
+          <p>Orientações, novidades e comunicados do Comando.<br>O que você precisa saber, em um só lugar.</p>
+          <button id="newNotice" class="btn notice-create hide" type="button"><span aria-hidden="true">＋</span> Criar aviso</button>
+        </div>
+        <div class="notice-hero-art" aria-hidden="true"><div class="notice-orbit"></div><svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2"><path d="M30 51h22l36-18v54L52 69H30z"/><path d="m39 69 7 23h14l-8-23M88 49c12 0 12 22 0 22M100 35l10-9m-6 34h13m-17 25 10 9"/><path d="M52 51v18"/></svg><span>COMUNICADOS OFICIAIS</span></div>
       </section>
+      <div class="notice-mural-heading"><div><h2>Mural de avisos</h2><p>Acompanhe as publicações da liderança.</p></div><span class="notice-audience">Exclusivo para membros</span></div>
       <div class="notice-toolbar">
-        <label class="field"><span>Buscar avisos</span><input id="noticeSearch" type="search" placeholder="Título ou conteúdo…"></label>
+        <label class="field notice-search"><span class="sr-only">Buscar avisos</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="noticeSearch" type="search" placeholder="Buscar por título ou conteúdo…"></label>
         <label id="archiveField" class="field hide"><span>Exibir</span><select id="noticeStatus"><option value="ativos">Publicados</option><option value="arquivados">Arquivados</option></select></label>
-        <button id="refreshNotices" class="btn secondary" type="button">Atualizar avisos</button>
-        <button id="newNotice" class="btn hide" type="button">Novo aviso</button>
+        <button id="refreshNotices" class="btn secondary" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 8a9 9 0 1 0 1 8M20 3v6h-6"/></svg> Atualizar avisos</button>
       </div>
-      <section id="noticeEditor" class="dashboard-card hide" aria-labelledby="editorTitle">
-        <h2 id="editorTitle">Novo aviso</h2>
-        <p>Ao publicar, o comunicado ficará visível para todos os membros autenticados.</p>
-        <form id="noticeForm" class="notice-form">
-          <label class="field"><span>Título *</span><input id="noticeTitle" required minlength="3" maxlength="120"></label>
-          <label class="field"><span>Prioridade</span><select id="noticePriority"><option value="normal">Normal</option><option value="importante">Importante</option><option value="urgente">Urgente</option></select></label>
-          <label class="field"><span>Comunicado *</span><textarea id="noticeContent" required minlength="3" maxlength="5000" rows="7" placeholder="Escreva as orientações para a Cavalaria…"></textarea></label>
-          <div class="form-actions"><button id="saveNotice" class="btn" type="submit">Publicar aviso</button><button id="cancelNotice" class="btn secondary" type="button">Cancelar</button></div>
-        </form>
-      </section>
-      <p id="noticeState" class="dashboard-state" role="status" aria-live="polite"></p>
-      <div id="noticeList" class="notice-list" aria-busy="false"></div>
+      <div id="priorityFilters" class="notice-filters" role="group" aria-label="Filtrar por prioridade">
+        <button type="button" data-priority="todas" aria-pressed="true">Todos <span id="countAll">—</span></button>
+        <button type="button" data-priority="urgente" aria-pressed="false"><i class="priority-dot urgente" aria-hidden="true"></i>Urgentes <span id="countUrgent">—</span></button>
+        <button type="button" data-priority="importante" aria-pressed="false"><i class="priority-dot importante" aria-hidden="true"></i>Importantes <span id="countImportant">—</span></button>
+        <button type="button" data-priority="normal" aria-pressed="false">Normais <span id="countNormal">—</span></button>
+      </div>
+      <div class="notice-layout">
+        <section aria-label="Publicações"><p id="noticeState" class="dashboard-state" role="status" aria-live="polite"></p><div id="noticeList" class="notice-list" aria-busy="false"></div></section>
+        <aside class="notice-guide" aria-label="Sobre o mural">
+          <span class="notice-guide-icon" aria-hidden="true">✦</span><h3>Informação que conecta.</h3><p>Este é o canal oficial do Comando com a Cavalaria. Consulte o mural para acompanhar as orientações mais recentes.</p>
+          <div class="notice-guide-rule"></div><h4>Cada aviso, uma prioridade</h4>
+          <dl><dt><i class="priority-dot urgente" aria-hidden="true"></i>Urgente</dt><dd>Requer sua atenção imediata.</dd><dt><i class="priority-dot importante" aria-hidden="true"></i>Importante</dt><dd>Orientações que merecem destaque.</dd><dt><i class="priority-dot normal" aria-hidden="true"></i>Normal</dt><dd>Novidades e informações de rotina.</dd></dl>
+          <p class="notice-order-note">Os avisos aparecem por prioridade e, depois, do mais recente para o mais antigo.</p>
+        </aside>
+      </div>
     </div>
     <noscript><p class="system-msg error">Ative o JavaScript para ler os avisos.</p></noscript>
   </main>
+  <dialog id="noticeEditor" class="notice-dialog" aria-labelledby="editorTitle" aria-describedby="editorDescription">
+    <div class="notice-dialog-header"><div><div class="notice-eyebrow">PUBLICAÇÃO DO COMANDO</div><h2 id="editorTitle">Criar aviso</h2><p id="editorDescription">Uma mensagem clara mantém todos na mesma direção.</p></div><button id="closeNotice" class="icon-button" type="button" aria-label="Fechar criação de aviso">✕</button></div>
+    <div id="editorMessage" class="system-msg error hide" role="alert"></div>
+    <form id="noticeForm">
+      <div class="notice-composer">
+        <div class="notice-form">
+          <label class="field"><span id="titleLabel">Título *</span><input aria-labelledby="titleLabel" id="noticeTitle" required minlength="3" maxlength="120" placeholder="Dê um título ao comunicado" aria-describedby="titleCount"><small id="titleCount" class="notice-counter">0 / 120</small></label>
+          <label class="field"><span id="priorityLabel">Prioridade</span><select aria-labelledby="priorityLabel" id="noticePriority" aria-describedby="priorityHelp"><option value="normal">Normal</option><option value="importante">Importante</option><option value="urgente">Urgente</option></select><small id="priorityHelp">Para novidades e informações de rotina.</small></label>
+          <label class="field"><span id="contentLabel">Comunicado *</span><textarea aria-labelledby="contentLabel" id="noticeContent" required minlength="3" maxlength="5000" rows="7" placeholder="O que os membros precisam saber? Inclua datas, horários e orientações." aria-describedby="contentCount"></textarea><small id="contentCount" class="notice-counter">0 / 5000</small></label>
+        </div>
+        <aside class="notice-preview-panel" aria-label="Prévia da publicação"><div class="notice-preview-label"><span class="status-dot"></span> PRÉVIA DO AVISO</div><article class="notice-card"><div class="notice-heading"><span id="previewPriority" class="notice-priority normal">Normal</span></div><h2 id="previewTitle">O título do seu aviso</h2><p id="previewContent" class="notice-content">Seu comunicado aparecerá aqui enquanto você escreve.</p><div id="previewAuthor" class="notice-meta"></div></article><p>A publicação ficará visível para todos os membros autenticados.</p></aside>
+      </div>
+      <div class="notice-dialog-footer"><span>Os campos com * são obrigatórios.</span><div class="form-actions"><button id="cancelNotice" class="btn secondary" type="button">Cancelar</button><button id="saveNotice" class="btn" type="submit">Publicar aviso</button></div></div>
+    </form>
+  </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="admin-shell.js"></script>
