@@ -1,5 +1,16 @@
 # Publicação gratuita: Cloudflare Pages + Supabase
 
+## Publicação realizada em 20/10/2026
+
+- Endereço público: **https://cavalaria-oeste-roleplay.pages.dev/**.
+- Projeto Cloudflare Pages: `cavalaria-oeste-roleplay`, conectado somente a `DevLUKASbr/cavalaria-oeste-roleplay`, com deploy automático da `main`.
+- Primeiro deploy: `9b9474cb-22ba-428c-a674-1466ea31a199`, commit `5e13cff` (merge do PR #15).
+- API `cavalaria-api` publicada pelo editor do Supabase existente. A validação da sessão e dos cargos continua dentro da API.
+- Verificação pública: login, HTML, CSS e JavaScript retornaram 200; as cinco rotas da API retornaram 401 sem sessão; um Bearer inválido foi encaminhado e rejeitado pela API. Cabeçalhos de proteção presentes.
+- A confirmação dos fluxos com conta real depende do login do proprietário no novo domínio. Nenhum aviso fictício nem alteração de dados foi executado nesta migração.
+
+Os merges das páginas já publicam automaticamente pela Cloudflare. O secret `SUPABASE_ACCESS_TOKEN` ainda precisa ser cadastrado pelo proprietário para automatizar atualizações da API pelo workflow; até lá, publique alterações da função pelo editor Supabase. O endereço antigo do Netlify continua separado.
+
 ## Como o sistema será publicado
 
 - O GitHub continua guardando o código e recebendo os merges.
