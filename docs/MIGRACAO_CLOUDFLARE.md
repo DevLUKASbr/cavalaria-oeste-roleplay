@@ -7,7 +7,7 @@
 - Primeiro deploy: `9b9474cb-22ba-428c-a674-1466ea31a199`, commit `5e13cff` (merge do PR #15).
 - API `cavalaria-api` publicada pelo editor do Supabase existente. A validação da sessão e dos cargos continua dentro da API.
 - Verificação pública: login, HTML, CSS e JavaScript retornaram 200; as cinco rotas da API retornaram 401 sem sessão; um Bearer inválido foi encaminhado e rejeitado pela API. Cabeçalhos de proteção presentes.
-- A confirmação dos fluxos com conta real depende do login do proprietário no novo domínio. Nenhum aviso fictício nem alteração de dados foi executado nesta migração.
+- Conferência com a conta real de administrador: login concluído pelo proprietário, Início carregando o efetivo existente, Avisos carregando a lista vazia sem erro de servidor e botão Criar aviso abrindo o editor com autoria correta. Nenhum aviso fictício nem alteração de dados foi executado nesta migração; as gravações foram verificadas nos testes com dados simulados.
 
 Os merges das páginas já publicam automaticamente pela Cloudflare. O secret `SUPABASE_ACCESS_TOKEN` ainda precisa ser cadastrado pelo proprietário para automatizar atualizações da API pelo workflow; até lá, publique alterações da função pelo editor Supabase. O endereço antigo do Netlify continua separado.
 
