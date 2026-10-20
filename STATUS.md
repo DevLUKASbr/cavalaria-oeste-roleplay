@@ -1,3 +1,20 @@
+# Atualização do mural de Avisos — 20/10/2026
+
+Implementação visual concluída e preparada para envio ao GitHub na branch `feature/avisos-mural-moderno`, criada da `main` atual (`e7c4b09`). O deploy de produção no Netlify permanece pendente; o painel da equipe informou bloqueio por créditos esgotados.
+
+- Mural com identidade verde e dourada, cartões com autoria/data/cargo, destaque por prioridade, busca e filtros com contagens reais da lista carregada.
+- Botão **Criar aviso** para Adm, Xerife e Sub-Xerife. Editor em janela modal com prévia ao escrever, contadores de caracteres, validação, confirmação ao descartar e preservação do texto em falha de publicação.
+- Edição, arquivamento e republicação mantidos. Publicar limpa os filtros para que o novo post apareça. Membro e Acesso limitado continuam com leitura dos publicados.
+- Layout de desktop e celular revisado em capturas, incluindo texto longo, editor sem rolagem horizontal e botões de publicação visíveis no rodapé da janela.
+- Backend, persistência, autorização, sino e integração com o Início reaproveitados da implementação existente. Nenhuma migração de banco ou nova variável de ambiente.
+
+Validação final: **40 testes unitários/servidor aprovados** e **11 testes Chromium de Avisos aprovados**. Os testes usam serviços/dados simulados. Na primeira execução geral, os 26 testes dos demais módulos passaram; três testes de Avisos identificaram nomes acessíveis que incluíam os contadores. Os rótulos foram corrigidos e todos os 11 testes de Avisos passaram novamente após o ajuste final do rodapé. `git diff --check` aprovado.
+
+Publicação: enviar este código pelo fluxo de deploy do projeto existente `glittery-douhua-4fc420`, preservando `site/` como publish directory e `netlify/functions/` como functions directory (já definidos em `netlify.toml`). É necessário publicar também as Functions; um upload apenas da pasta `site/` não inclui a API de avisos. Após o deploy, homologar publicação com liderança e leitura em outra sessão de Membro usando dados de teste autorizados. Nenhum aviso foi inserido no ambiente real nesta tarefa.
+
+Arquivos desta atualização: `site/avisos.html`, `site/avisos.css`, `site/avisos.js`, `tests/browser/avisos.spec.cjs` e este relatório.
+
+---
 # STATUS — Avisos da Cavalaria
 
 Data: 17/10/2026 (America/Bahia). Branch: `feature/avisos-cavalaria`, criada da `main` oficial em `ebb3d93`.

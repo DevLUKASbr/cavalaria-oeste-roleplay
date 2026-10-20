@@ -7,14 +7,14 @@ for (const cargo of ['Xerife', 'Sub-Xerife', 'Adm']) {
     const { calls } = await prepare(page, { cargo });
     await page.goto('/avisos.html');
     await expect(page.locator('#noticeList')).toContainText('Nenhum aviso publicado');
-    await page.getByRole('button', { name: 'Novo aviso', exact: true }).click();
+    await page.getByRole('button', { name: 'Criar aviso', exact: true }).click();
     await page.getByLabel('Título *', { exact: true }).fill('Ordem de serviço');
     await page.getByRole('combobox', { name: 'Prioridade', exact: true }).selectOption('urgente');
     await page.getByLabel('Comunicado *', { exact: true }).fill('Apresentação no quartel às 20h.');
     await page.getByRole('button', { name: 'Publicar aviso', exact: true }).click();
     await expect(page.locator('#noticeList')).toContainText('Ordem de serviço');
-    await expect(page.locator('.notice-priority')).toHaveText('Urgente');
-    await expect(page.locator('.notice-meta')).toContainText('Morgan West');
+    await expect(page.locator('#noticeList .notice-priority')).toHaveText('Urgente');
+    await expect(page.locator('#noticeList .notice-meta')).toContainText('Morgan West');
     await page.getByRole('button', { name: 'Editar aviso', exact: true }).click();
     await page.getByLabel('Título *', { exact: true }).fill('Ordem revisada');
     await page.getByRole('button', { name: 'Salvar alterações', exact: true }).click();
@@ -73,7 +73,7 @@ test('falha de publicação mantém o texto para nova tentativa', async ({ page 
   await page.locator('#noticeTitle').fill('Aviso de teste');
   await page.locator('#noticeContent').fill('Mensagem que deve permanecer.');
   await page.locator('#saveNotice').click();
-  await expect(page.locator('#message')).toContainText('Falha fictícia');
+  await expect(page.locator('#editorMessage')).toContainText('Falha fictícia');
   await expect(page.locator('#noticeContent')).toHaveValue('Mensagem que deve permanecer.');
   await expect(page.locator('#saveNotice')).toBeEnabled();
 });
@@ -84,11 +84,69 @@ test('avisos desktop e mobile mantêm conteúdo longo legível, sem erros de run
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/avisos.html');
-    await expect(page.locator('.notice-card')).toHaveCount(2);
+    await expect(page.locator('#noticeList .notice-card')).toHaveCount(2);
     await page.locator('#newNotice').click();
+    await expect(page.locator('#saveNotice')).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.locator('#noticeEditor').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`editor-${width}.png`), fullPage: true });
     await page.locator('#cancelNotice').click();
     await page.screenshot({ path: testInfo.outputPath(`avisos-${width}.png`), fullPage: true });
   }
   expect(errors).toEqual([]);
+});
+
+test('busca e prioridade funcionam em conjunto; limpar recupera o mural', async ({ page }) => {
+  await prepare(page, { notices: [notice, { ...notice, id: 'normal-notice', titulo: 'Orientações gerais', prioridade: 'normal' }] });
+  await page.goto('/avisos.html');
+  await expect(page.locator('#countAll')).toHaveText('2');
+  await expect(page.locator('#countUrgent')).toHaveText('1');
+  await page.getByRole('button', { name: 'Urgentes' }).click();
+  await expect(page.locator('#noticeList article')).toHaveCount(1);
+  await page.locator('#noticeSearch').fill('inexistente');
+  await expect(page.locator('#noticeList')).toContainText('Nenhum resultado');
+  await page.getByRole('button', { name: 'Limpar filtros' }).click();
+  await expect(page.locator('#noticeList article')).toHaveCount(2);
+  await expect(page.locator('#noticeSearch')).toHaveValue('');
+});
+
+test('prévia segura, contadores e confirmação protegem o texto do editor', async ({ page }) => {
+  const { calls } = await prepare(page);
+  await page.goto('/avisos.html');
+  await page.locator('#newNotice').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator('#noticeTitle')).toBeFocused();
+  await page.locator('#noticeTitle').fill('Nova orientação');
+  await page.locator('#noticeContent').fill('<img src=x onerror="window.__xss=true">');
+  await page.locator('#noticePriority').selectOption('urgente');
+  await expect(page.locator('#previewTitle')).toHaveText('Nova orientação');
+  await expect(page.locator('#previewContent')).toContainText('<img src=x');
+  await expect(page.locator('#previewContent img')).toHaveCount(0);
+  await expect(page.locator('#previewPriority')).toHaveText('Urgente');
+  await expect(page.locator('#titleCount')).toHaveText('15 / 120');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator('#noticeTitle')).toHaveValue('Nova orientação');
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#cancelNotice').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#newNotice')).toBeFocused();
+  expect(calls.some(call => call.payload)).toBe(false);
+});
+
+test('publicar limpa os filtros para mostrar o novo aviso e persiste ao recarregar', async ({ page }) => {
+  await prepare(page, { notices: [notice] });
+  await page.goto('/avisos.html');
+  await page.getByRole('button', { name: 'Urgentes' }).click();
+  await page.locator('#noticeSearch').fill('Revista');
+  await page.locator('#newNotice').click();
+  await page.locator('#noticeTitle').fill('Novo comunicado');
+  await page.locator('#noticeContent').fill('Orientação para todos os membros.');
+  await page.locator('#saveNotice').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#noticeList')).toContainText('Novo comunicado');
+  await expect(page.locator('#noticeSearch')).toHaveValue('');
+  await page.reload();
+  await expect(page.locator('#noticeList')).toContainText('Novo comunicado');
 });
