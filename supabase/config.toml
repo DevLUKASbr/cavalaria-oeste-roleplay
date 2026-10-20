@@ -1,0 +1,8 @@
+project_id = "cavalaria-oeste-roleplay"
+
+[functions.cavalaria-api]
+enabled = true
+# A API valida o Bearer com Auth /user e checa permissões em todas as operações.
+# Isto permite sessões com as chaves de assinatura atuais, sem depender do verificador JWT legado.
+verify_jwt = false
+entrypoint = "./functions/cavalaria-api/index.ts"

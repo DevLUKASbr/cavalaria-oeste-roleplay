@@ -1,3 +1,18 @@
+# Migração Cloudflare Pages + Supabase — 20/10/2026
+
+Código preparado na branch `feat/migracao-cloudflare-supabase`, criada da `main` em `73234e9`. A publicação real ainda depende da conta Cloudflare, autorização do repositório e deploy da Edge Function no projeto Supabase existente. Nenhuma alteração em tabelas, contas, políticas RLS ou dados reais foi executada.
+
+- Páginas publicadas a partir de `site/`, com Functions apenas em `/api/*`, cabeçalhos de proteção e mesma origem para as chamadas do navegador.
+- Cloudflare encaminha somente a sessão da conta; a chave administrativa fica na API Supabase. As regras de cargo são reutilizadas e verificadas no servidor.
+- API compartilhada em `supabase/functions/_shared/`; adaptadores Netlify mantêm compatibilidade com o deploy anterior. Os cinco módulos usam o mesmo banco/bucket e os mesmos formatos de dados.
+- Edge Function `cavalaria-api`, pacote único para deploy pelo editor, configuração Pages em `wrangler.toml` e workflow opcional para atualizações da API pelo GitHub.
+- Arquitetura evita o limite de 50 subrequisições externas do Workers Free: a Cloudflare faz uma chamada por operação; a leitura dos registros ocorre no Supabase.
+
+Validação: **53 testes de servidor** e **37 testes Chromium** aprovados; builds Edge e Cloudflare compilados; prévia Wrangler real com páginas 200, API sem sessão 401, rota desconhecida 404 e cabeçalhos conferidos. Chamadas autenticadas e gravações foram verificadas com HTTP/dados simulados. A API real e o endereço público novo ainda precisam de homologação.
+
+Guia: [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A automação da API requer cadastrar `SUPABASE_ACCESS_TOKEN` diretamente nos secrets de Actions do GitHub; é possível fazer o primeiro deploy pelo editor Supabase sem criar esse token. Cotas gratuitas dos provedores e limite existente de 1.000 objetos por pasta continuam aplicáveis.
+
+---
 # Atualização do mural de Avisos — 20/10/2026
 
 Implementação visual concluída e preparada para envio ao GitHub na branch `feature/avisos-mural-moderno`, criada da `main` atual (`e7c4b09`). O deploy de produção no Netlify permanece pendente; o painel da equipe informou bloqueio por créditos esgotados.

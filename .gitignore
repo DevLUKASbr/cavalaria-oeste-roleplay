@@ -4,3 +4,9 @@ playwright-report/
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/
+dist/
+supabase/.temp/
+supabase/.branches/

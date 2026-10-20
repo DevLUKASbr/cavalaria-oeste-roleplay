@@ -1,0 +1,7 @@
+name = "cavalaria-oeste-roleplay"
+compatibility_date = "2026-10-20"
+pages_build_output_dir = "./site"
+
+# URL pública, sem chave secreta. Mesma API em Production e Preview.
+[vars]
+SUPABASE_FUNCTION_URL = "https://qohigzayevglccdwtlkm.supabase.co/functions/v1/cavalaria-api"
