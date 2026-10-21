@@ -1,3 +1,13 @@
+# Seleção de oficiais em Ações — 21/10/2026
+
+Campos de participantes substituídos por caixas de seleção com busca pelo Nome no RP cadastrado em Contas e permissões. A lista inclui todas as contas autorizadas mesmo desconectadas ou sem login anterior, e a quantidade da Cavalaria acompanha a seleção automaticamente. Busca e falhas de recarga preservam o rascunho e os oficiais marcados.
+
+Diretório mínimo em `GET /api/acoes?oficiais=1`, disponível a todos os oficiais com acesso ao módulo, sem expor e-mails ou liberar a administração de Contas. Backend valida os IDs, resolve os nomes no servidor e rejeita duplicados/contas indisponíveis. Snapshots e participantes anteriores sem conta atual são preservados na edição. Relatórios usam IDs quando disponíveis para evitar duplicar contas após mudança de nick.
+
+Validação: **75 testes de servidor** e **48 testes Chromium** aprovados; bundle Edge compilado; seletores desktop e celular revisados. Testes usam dados simulados. Sem migração SQL ou mudança de contas/RLS. Sem medição de presença do painel ou do jogo: a lista é completa e independente de sessão ativa.
+
+---
+
 # Livro de Ações — 21/10/2026
 
 Módulo implementado na branch `feature/acoes-cavalaria`, a partir da `main` em `56a992b`. Todos os oficiais autorizados podem registrar e consultar ações, conforme escolha do proprietário. Cada autor corrige os próprios registros; liderança pode revisar, arquivar e restaurar qualquer ação.

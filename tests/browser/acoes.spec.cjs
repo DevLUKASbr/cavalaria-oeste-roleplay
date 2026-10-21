@@ -8,10 +8,9 @@ async function fill(page, values = {}) {
   await page.locator('#actionTitle').fill(values.titulo || 'Defesa de Valentine');
   await page.locator('#actionWhen').fill(today + 'T00:00');
   await page.locator('#authorRank').fill('Sargento');
-  await page.locator('#actionCavalry').fill('2');
   await page.locator('#actionOpponents').fill('3');
   await page.getByLabel('↗ Vitória', { exact: true }).check();
-  await page.locator('#actionParticipants').fill(values.participantes || 'Morgan West\nJohn Carter');
+  for (const nome of values.participantes ?? ['Morgan West', 'John Carter']) await page.getByRole('checkbox', { name: nome, exact: true }).check();
   await page.locator('#actionReport').fill('Retomada da estação.');
 }
 
@@ -22,7 +21,7 @@ test('Membro registra confronto com participantes e encontra o registro após re
   await expect(page.locator('#archiveField')).toBeHidden();
   await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
   await fill(page);
-  await expect(page.locator('#participantCount')).toContainText('2 de 2');
+  await expect(page.locator('#participantCount')).toHaveText('2 oficiais selecionados');
   await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
   await expect(page.locator('#actionEditor')).not.toBeVisible();
   await expect(page.locator('.action-card')).toContainText('Morgan West · Sargento');
@@ -32,33 +31,80 @@ test('Membro registra confronto com participantes e encontra o registro após re
   await expect(page.getByRole('button', { name: 'Arquivar', exact: true })).toHaveCount(0);
   const post = calls.find(call => call.path === '/api/acoes' && call.payload?.acao === 'criar');
   expect(post.authenticated).toBe(true);
-  expect(post.payload.participantes).toEqual(['Morgan West', 'John Carter']);
+  expect(post.payload.participantes_ids).toEqual(['test-official', 'john-official']);
+  expect(post.payload.participantes).toBeUndefined();
   expect(post.payload.ocorrido_em).toBe(today + 'T03:00:00.000Z');
   expect(post.payload.autor).toBeUndefined();
   await page.reload();
   await expect(page.locator('.action-card h3')).toHaveText('Defesa de Valentine');
 });
 
-test('quantidade e oficiais duplicados impedem envio; falha do servidor preserva o formulário', async ({ page }) => {
+test('seleção obrigatória e quantidade automática; falha preserva oficiais marcados', async ({ page }) => {
   const settings = { cargo: 'Membro', actionSaveFail: true };
   const { calls } = await prepare(page, settings);
   await page.goto('/acoes.html');
   await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
-  await fill(page, { participantes: 'Morgan West' });
+  await fill(page, { participantes: [] });
   await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
   expect(calls.filter(call => call.payload?.acao === 'criar')).toHaveLength(0);
-  await page.locator('#actionParticipants').fill('Morgan West\n morgan  west');
-  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
-  expect(await page.locator('#actionParticipants').evaluate(node => node.validationMessage)).toContain('repetidos');
-  await page.locator('#actionParticipants').fill('Morgan West\nJohn Carter');
+  await expect(page.locator('#selectorError')).toContainText('Selecione');
+  await page.getByRole('checkbox', { name: 'Morgan West', exact: true }).check();
+  await expect(page.locator('#actionCavalry')).toHaveValue('1');
+  await expect(page.locator('#actionCavalry')).toHaveAttribute('readonly', '');
+  await page.getByRole('checkbox', { name: 'John Carter', exact: true }).check();
+  await expect(page.locator('#actionCavalry')).toHaveValue('2');
   await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
   await expect(page.locator('#editorMessage')).toContainText('Falha fictícia');
   await expect(page.locator('#actionTitle')).toHaveValue('Defesa de Valentine');
-  await expect(page.locator('#actionParticipants')).toHaveValue('Morgan West\nJohn Carter');
+  await expect(page.getByRole('checkbox', { name: 'Morgan West', exact: true })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeChecked();
   settings.actionSaveFail = false;
   await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
   await expect(page.locator('#actionEditor')).not.toBeVisible();
   await expect(page.locator('.action-card')).toHaveCount(1);
+});
+
+test('busca pelo nick preserva seleção fora do filtro e permite remover pelos marcadores', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro' });
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Morgan West', exact: true }).check();
+  await page.locator('#officerSearch').fill('joao');
+  await expect(page.getByRole('checkbox')).toHaveCount(1);
+  await page.getByRole('checkbox', { name: 'João do Oeste', exact: true }).check();
+  await expect(page.locator('#participantCount')).toHaveText('2 oficiais selecionados');
+  await expect(page.locator('#selectedOfficers')).toContainText('Morgan West');
+  await page.locator('#officerSearch').fill('');
+  await expect(page.getByRole('checkbox', { name: 'Morgan West', exact: true })).toBeChecked();
+  await page.getByRole('button', { name: 'Remover Morgan West', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Morgan West', exact: true })).not.toBeChecked();
+  await expect(page.locator('#actionCavalry')).toHaveValue('1');
+});
+
+test('falha na lista de oficiais permite recarregar e não perde o rascunho', async ({ page }) => {
+  const settings = { officersFail: true };
+  await prepare(page, settings);
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  await page.locator('#actionTitle').fill('Confronto preservado');
+  await expect(page.locator('#officerState')).toContainText('Falha fictícia');
+  await expect(page.locator('#saveAction')).toBeDisabled();
+  settings.officersFail = false;
+  await page.getByRole('button', { name: 'Atualizar lista', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeVisible();
+  await expect(page.locator('#actionTitle')).toHaveValue('Confronto preservado');
+});
+
+test('edição preserva participante antigo sem conta atual e permite desmarcá-lo', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro', actions: [sample('legacy-officer-action', { participantes: ['Morgan West', 'Oficial antigo'], participantes_ids: ['test-official', null] })] });
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Editar registro', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Oficial antigo', exact: true })).toBeChecked();
+  await expect(page.locator('#officerList')).toContainText('Participante do registro original');
+  await page.getByRole('checkbox', { name: 'Oficial antigo', exact: true }).uncheck();
+  await expect(page.locator('#actionCavalry')).toHaveValue('1');
+  await page.getByRole('checkbox', { name: 'Oficial antigo', exact: true }).check();
+  await expect(page.locator('#actionCavalry')).toHaveValue('2');
 });
 
 test('oficial vê correção só dos próprios registros; edição mantém o autor original', async ({ page }) => {

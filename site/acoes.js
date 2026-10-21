@@ -9,22 +9,61 @@
   const form = $('actionForm');
   const pageSize = 10;
   let records = [], matched = [], loaded = false, busy = false, page = 1, editingId = null, initialDraft = '', lastRank = '', management = null;
+  let officers = [], selected = new Map(), historical = new Map(), officersReady = false, officersLoading = false, officersError = '', officerRequest = 0;
   const today = data.dayKey();
   $('dateFrom').value = today.slice(0, 8) + '01';
   $('dateTo').value = today;
   setHidden('archiveField', !manager);
   setHidden('private', false);
   const filters = () => ({ search: $('actionSearch').value, from: $('dateFrom').value, to: $('dateTo').value, result: $('resultFilter').value });
-  const participants = () => $('actionParticipants').value.split(/\r?\n/).map(name => name.normalize('NFKC').trim().replace(/\s+/g, ' ')).filter(Boolean);
-  const draft = () => JSON.stringify([...form.querySelectorAll('input,textarea')].map(input => input.type === 'radio' ? input.checked : input.value));
+  const draft = () => JSON.stringify({ fields: ['actionTitle', 'actionWhen', 'authorRank', 'actionOpponents', 'actionReport'].map(id => $(id).value), result: form.querySelector('[name=actionResult]:checked')?.value || '', ids: [...selected.keys()].sort() });
+  const searchKey = value => data.normalize(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   function editorError(text = '') { $('editorMessage').textContent = text; setHidden('editorMessage', !text); }
   function updateDraft() {
-    const names = participants(), count = Number($('actionCavalry').value);
-    const duplicate = new Set(names.map(data.normalize)).size !== names.length;
-    $('participantCount').textContent = `${names.length} de ${count || '—'} oficiais informados`;
-    $('participantCount').classList.toggle('is-error', names.length > 0 && (duplicate || names.length !== count));
-    $('actionParticipants').setCustomValidity(duplicate ? 'Remova os nomes repetidos.' : names.length !== count ? 'Informe um oficial por linha, na mesma quantidade da Cavalaria.' : '');
+    const count = selected.size;
+    $('actionCavalry').value = count;
+    $('participantCount').textContent = `${count} ${count === 1 ? 'oficial selecionado' : 'oficiais selecionados'}`;
     $('confrontationPreview').textContent = `Confronto ${count || '—'} × ${$('actionOpponents').value || '—'}`;
+    if (count > 0 && count <= 200) setHidden('selectorError', true);
+    $('saveAction').disabled = busy || officersLoading || !officersReady;
+  }
+  function renderOfficers() {
+    const choices = new Map(officers.map(person => [person.id, person]));
+    for (const [id, person] of historical) if (!choices.has(id)) choices.set(id, person);
+    for (const [id, person] of selected) if (!choices.has(id)) choices.set(id, { ...person, unavailable: true });
+    const term = searchKey($('officerSearch').value);
+    const shown = [...choices.entries()].filter(([, person]) => !term || searchKey(person.nome).includes(term)).sort((a,b) => a[1].nome.localeCompare(b[1].nome, 'pt-BR'));
+    $('officerState').textContent = officersLoading ? 'Carregando oficiais…' : officersError || (!choices.size ? 'Nenhum oficial disponível. Solicite à liderança o cadastro do nome no RP em Contas e permissões.' : `${shown.length} ${shown.length === 1 ? 'oficial na lista' : 'oficiais na lista'}${term ? ' para esta busca' : ''}.`);
+    $('officerState').classList.toggle('is-error', Boolean(officersError));
+    $('officerList').innerHTML = shown.map(([id, person]) => `<label class="officer-option${selected.has(id) ? ' is-selected' : ''}"><input type="checkbox" data-officer="${esc(id)}" aria-label="${esc(person.nome)}" ${selected.has(id) ? 'checked' : ''} ${busy || officersLoading || !officersReady ? 'disabled' : ''}><span><strong>${esc(person.nome)}</strong><small>${person.historical ? 'Participante do registro original' : person.unavailable ? 'Não disponível para novos registros' : esc(person.cargo || 'Oficial')}</small></span></label>`).join('');
+    $('selectedOfficers').innerHTML = [...selected].map(([id, person]) => `<li><span>${esc(person.nome)}</span><button type="button" data-remove-officer="${esc(id)}" aria-label="Remover ${esc(person.nome)}" ${busy || officersLoading ? 'disabled' : ''}>×</button></li>`).join('');
+    $('refreshOfficers').disabled = busy || officersLoading;
+    $('clearParticipants').disabled = busy || officersLoading || !selected.size;
+    updateDraft();
+  }
+  async function loadOfficers() {
+    if (busy || officersLoading) return;
+    const request = ++officerRequest;
+    officersLoading = true; officersReady = false; officersError = ''; renderOfficers();
+    try {
+      const result = await api('acoes?oficiais=1');
+      if (request !== officerRequest) return;
+      if (!Array.isArray(result.oficiais)) throw new Error('Não foi possível conferir a lista de oficiais.');
+      officers = result.oficiais;
+      const unchanged = draft() === initialDraft;
+      // Associar registros antigos pelo nick somente quando há uma correspondência única.
+      for (const [id, person] of [...historical]) {
+        if (!id.startsWith('anterior:')) continue;
+        const matches = officers.filter(officer => data.normalize(officer.nome) === data.normalize(person.nome));
+        if (matches.length !== 1) continue;
+        const replacement = { ...matches[0], nome: person.nome };
+        historical.delete(id); historical.set(replacement.id, replacement);
+        if (selected.has(id)) { selected.delete(id); selected.set(replacement.id, replacement); }
+      }
+      if (unchanged) initialDraft = draft();
+      officersReady = true;
+    } catch (error) { if (request === officerRequest) officersError = error.message + ' Use Atualizar lista para tentar novamente.'; }
+    finally { if (request === officerRequest) { officersLoading = false; renderOfficers(); } }
   }
   function setBusy(value) {
     busy = value;
@@ -35,6 +74,7 @@
       $('exportActions').disabled = !loaded || !matched.length;
       $('previousPage').disabled = !loaded || page <= 1;
       $('nextPage').disabled = !loaded || page * pageSize >= matched.length;
+      if (editor.open) renderOfficers();
     }
   }
   function render() {
@@ -92,11 +132,14 @@
   }
   function closeEditor(force = false) {
     if (!force && (busy || (draft() !== initialDraft && !confirm('Descartar este registro? As alterações ainda não foram salvas.')))) return;
-    editor.close(); editingId = null; form.reset(); editorError(); $('newAction').focus();
+    officerRequest++; officersLoading = false; editor.close(); editingId = null; form.reset(); selected.clear(); historical.clear(); editorError(); $('newAction').focus();
   }
   function openEditor(item) {
     if (busy || !loaded) return;
     editingId = item?.id || null;
+    officerRequest++; officersLoading = false; officersReady = false; officersError = ''; officers = [];
+    selected = new Map((item?.participantes || []).map((nome, index) => [item.participantes_ids?.[index] || `anterior:${index}`, { id: item.participantes_ids?.[index] || null, nome, historical: true }]));
+    historical = new Map(selected);
     form.reset(); editorError();
     $('editorTitle').textContent = item ? 'Editar registro de ação' : 'Registrar ação';
     $('saveAction').textContent = item ? 'Salvar alterações' : 'Salvar ação';
@@ -104,29 +147,47 @@
     const date = item?.ocorrido_em ? new Date(item.ocorrido_em) : new Date();
     $('actionWhen').value = new Date(date.getTime() - 3 * 3600000).toISOString().slice(0, 16);
     $('actionWhen').max = new Date(Date.now() - 3 * 3600000 + 300000).toISOString().slice(0, 16);
-    $('actionCavalry').value = item?.cavalaria || 2;
     $('actionOpponents').value = item?.oponentes || 2;
     const choice = [...form.querySelectorAll('[name=actionResult]')].find(input => input.value === item?.resultado);
     if (choice) choice.checked = true;
-    $('actionParticipants').value = (item?.participantes || []).join('\n');
     $('actionReport').value = item?.relato || '';
     $('authorRank').value = lastRank || (item?.autor?.id === access.user.id ? item.autor.patente : '') || '';
     $('registrarName').textContent = `Responsável: ${displayName(access.user)}`;
-    updateDraft(); initialDraft = draft(); editor.showModal(); $('actionTitle').focus();
+    $('officerSearch').value = ''; setHidden('selectorError', true);
+    updateDraft(); initialDraft = draft(); editor.showModal(); $('actionTitle').focus(); loadOfficers();
   }
   $('newAction').onclick = () => openEditor();
   $('closeAction').onclick = () => closeEditor();
   $('cancelAction').onclick = () => closeEditor();
   editor.addEventListener('cancel', event => { event.preventDefault(); closeEditor(); });
   form.addEventListener('input', updateDraft);
+  $('officerSearch').addEventListener('input', renderOfficers);
+  $('refreshOfficers').onclick = loadOfficers;
+  $('clearParticipants').onclick = () => { if (!busy && !officersLoading) { selected.clear(); renderOfficers(); } };
+  $('officerList').addEventListener('change', event => {
+    const input = event.target.closest('input[data-officer]');
+    if (!input || busy || officersLoading || !officersReady) return;
+    const id = input.dataset.officer;
+    if (input.checked) {
+      const person = historical.get(id) || officers.find(officer => officer.id === id);
+      if (person) selected.set(id, person);
+    } else selected.delete(id);
+    renderOfficers();
+  });
+  $('selectedOfficers').addEventListener('click', event => {
+    const button = event.target.closest('button[data-remove-officer]');
+    if (button && !busy && !officersLoading) { selected.delete(button.dataset.removeOfficer); renderOfficers(); }
+  });
   form.addEventListener('submit', async event => {
     event.preventDefault(); updateDraft();
-    if (busy || !form.reportValidity()) return;
+    if (busy || !officersReady || officersLoading) return;
+    if (selected.size < 1 || selected.size > 200) { $('selectorError').textContent = 'Selecione de 1 a 200 oficiais participantes.'; setHidden('selectorError', false); $('officerSearch').focus(); return; }
+    if (!form.reportValidity()) return;
     if ($('actionTitle').value.trim().length < 3 || $('authorRank').value.trim().length < 2) { editorError('Preencha a ação e sua patente sem usar apenas espaços.'); return; }
     const when = new Date($('actionWhen').value + ':00-03:00');
     if (!Number.isFinite(when.getTime())) { editorError('Confira a data e a hora da ação.'); return; }
     const id = editingId;
-    const body = { acao: id ? 'editar' : 'criar', ...(id ? { id } : {}), titulo: $('actionTitle').value.trim(), ocorrido_em: when.toISOString(), patente: $('authorRank').value.trim(), resultado: form.querySelector('[name=actionResult]:checked')?.value, cavalaria: Number($('actionCavalry').value), oponentes: Number($('actionOpponents').value), participantes: participants(), relato: $('actionReport').value.trim() };
+    const body = { acao: id ? 'editar' : 'criar', ...(id ? { id } : {}), titulo: $('actionTitle').value.trim(), ocorrido_em: when.toISOString(), patente: $('authorRank').value.trim(), resultado: form.querySelector('[name=actionResult]:checked')?.value, cavalaria: selected.size, oponentes: Number($('actionOpponents').value), participantes_ids: [...selected.keys()], relato: $('actionReport').value.trim() };
     setBusy(true); editorError();
     try {
       const response = await api('acoes', 'POST', body);

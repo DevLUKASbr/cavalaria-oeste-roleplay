@@ -20,7 +20,17 @@
   }
   function stats(records) {
     const total = records.length, wins = records.filter(item => item.resultado === 'vitoria').length;
-    return { total, wins, losses: records.filter(item => item.resultado === 'derrota').length, rate: total ? Math.round(wins / total * 100) : null, officers: new Set(records.flatMap(item => (item.participantes || []).map(normalize))).size };
+    const identities = new Map(), people = new Set();
+    for (const item of records) (item.participantes || []).forEach((name, i) => {
+      const id = item.participantes_ids?.[i];
+      if (id) { const key = normalize(name); if (!identities.has(key)) identities.set(key, new Set()); identities.get(key).add(id); }
+    });
+    for (const item of records) (item.participantes || []).forEach((name, i) => {
+      const known = identities.get(normalize(name));
+      const id = item.participantes_ids?.[i] || (known?.size === 1 ? [...known][0] : null);
+      people.add(id ? 'id:' + id : 'nome:' + normalize(name));
+    });
+    return { total, wins, losses: records.filter(item => item.resultado === 'derrota').length, rate: total ? Math.round(wins / total * 100) : null, officers: people.size };
   }
   function csv(records) {
     const cell = value => { let text = String(value ?? ''); if (/^[\s\u0000-\u001f]*[=+\-@]/.test(text) || /^[\t\r]/.test(text)) text = "'" + text; return '"' + text.replace(/"/g, '""') + '"'; };
