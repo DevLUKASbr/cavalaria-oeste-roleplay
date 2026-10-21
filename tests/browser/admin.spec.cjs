@@ -250,7 +250,7 @@ test('Treinamentos preserva leitura, criação, edição, vídeos e exclusão au
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#topics [data-action="delete"]').click();
   await expect(page.locator('#topics')).toContainText('Nenhum tópico publicado');
-  expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'excluir']);
+  expect(calls.filter(call => call.payload?.acao).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'excluir']);
   expect(calls.every(call => call.authenticated)).toBe(true);
 });
 
@@ -297,7 +297,7 @@ test('Recrutamento da main preserva roteiro, fichas, candidatos e ações autent
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#records [data-action="delete"]').click();
   await expect(page.locator('#records')).toContainText('Nenhuma ficha');
-  expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'excluir']);
+  expect(calls.filter(call => call.payload?.acao).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'excluir']);
   expect(calls.every(call => call.authenticated)).toBe(true);
 });
 
@@ -335,7 +335,7 @@ test('Investigações cadastra grupo e alvo com coordenadas, mostra no mapa e na
   await page.getByRole('tab', { name: 'Mapa e alvos', exact: true }).click();
   await expect(page.locator('#targets')).toContainText('Alvo Fictício');
   await expect(page.locator('#targets')).not.toContainText('Bando de Teste');
-  expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['salvar-grupo', 'salvar-alvo', 'excluir-grupo']);
+  expect(calls.filter(call => call.payload?.acao).map(call => call.payload.acao)).toEqual(['salvar-grupo', 'salvar-alvo', 'excluir-grupo']);
   expect(calls.every(call => call.authenticated)).toBe(true);
 });
 
@@ -371,7 +371,7 @@ test('Pessoas: cadastro fora de investigação, investigar e encerrar', async ({
   await page.locator('#people [data-action="close-case"]').click();
   await expect(page.locator('#people [data-action="investigate"]')).toHaveCount(1);
   await expect(page.locator('#targets')).toContainText('Nenhum alvo cadastrado');
-  const saved = calls.filter(call => call.payload).map(call => [call.payload.acao, call.payload.alvo?.investigado]);
+  const saved = calls.filter(call => call.payload?.acao).map(call => [call.payload.acao, call.payload.alvo?.investigado]);
   expect(saved).toEqual([['salvar-alvo', false], ['salvar-alvo', true], ['salvar-alvo', false]]);
 });
 
@@ -417,7 +417,7 @@ test('Lugares, local de trabalho, vínculos e grafo de Pessoas', async ({ page }
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#people tr', { hasText: 'Chefe Fictício' }).locator('[data-action="delete"]').click();
   await expect(page.locator('#links')).toContainText('Nenhum vínculo cadastrado');
-  expect(calls.filter(call => call.payload).map(call => call.payload.acao))
+  expect(calls.filter(call => call.payload?.acao).map(call => call.payload.acao))
     .toEqual(['salvar-alvo', 'salvar-alvo', 'salvar-alvo', 'salvar-vinculo', 'excluir-alvo']);
   expect(calls.every(call => call.authenticated)).toBe(true);
 });
