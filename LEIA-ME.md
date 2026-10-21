@@ -190,6 +190,10 @@ select id, 'admin' from auth.users where email = 'EMAIL_DA_CONTA';
 
 3. Preencha `site/config.js` com a URL e a chave **publishable** do projeto e configure o Netlify como acima. Daí em diante, tudo pela página Contas.
 
+## Manual de Armamentos
+
+Em **Manual de armamentos**, todos os oficiais autorizados consultam as armas permitidas por patente, regras de porte e fichas com fotos e características. A consulta respeita exatamente a relação fornecida pelo Comando, sem presumir que patentes superiores herdam as armas das anteriores. Escolher uma patente na tela não altera a conta. Há busca por nome, filtros por categoria e tabela completa. Guia: [docs/ARMAMENTOS.md](docs/ARMAMENTOS.md).
+
 ## Presença dos oficiais
 
 O seletor de participantes de Ações lista todos os oficiais autorizados e mostra Online no painel ou Offline. O indicador considera atividade em uma página interna visível nos últimos dois minutos; não representa o status dentro do jogo. Falhas de consulta mostram Status indisponível e não impedem selecionar os participantes. Busca, seleção e quantidade do confronto continuam independentes do status.

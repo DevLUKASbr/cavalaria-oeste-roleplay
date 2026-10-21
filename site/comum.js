@@ -40,6 +40,7 @@
   const PAGES = [
     { id: 'registro', href: 'painel.html', title: 'Registro' },
     { id: 'treinamentos', href: 'treinamentos.html', title: 'Treinamentos' },
+    { id: 'armamentos', href: 'armamentos.html', title: 'Manual de armamentos' },
     { id: 'recrutamento', href: 'recrutamento.html', title: 'Recrutamento' },
     { id: 'investigacoes', href: 'investigacoes.html', title: 'Investigações' },
     { id: 'acoes', href: 'acoes.html', title: 'Ações' },
@@ -52,8 +53,8 @@
     'Xerife': FULL_ACCESS,
     'Sub-Xerife': FULL_ACCESS,
     'Adm': FULL_ACCESS,
-    'Membro': ['treinamentos', 'avisos', 'acoes'],
-    'Acesso limitado': ['registro', 'avisos', 'acoes'],
+    'Membro': ['treinamentos', 'avisos', 'acoes', 'armamentos'],
+    'Acesso limitado': ['registro', 'avisos', 'acoes', 'armamentos'],
   };
   const CARGOS = ['Xerife', 'Sub-Xerife', 'Adm', 'Membro'];
 

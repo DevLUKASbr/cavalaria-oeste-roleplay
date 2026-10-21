@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Manual de armamentos da Cavalaria do Oeste: armas, características e permissões por patente.">
+  <title>Manual de armamentos · Cavalaria | Oeste Roleplay</title>
+  <link rel="icon" href="logo-oeste.png">
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="armamentos.css">
+</head>
+<body class="admin-page armory-page">
+  <div id="shell"></div>
+  <main id="mainContent" class="wrap" tabindex="-1">
+    <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
+    <div id="private" class="hide">
+      <section class="armory-hero" aria-labelledby="armoryTitle">
+        <div class="armory-hero-copy">
+          <div class="armory-eyebrow"><span aria-hidden="true">✦</span> ARMARIA DA CAVALARIA DO OESTE</div>
+          <h2 id="armoryTitle">Conheça o arsenal.<br><em>Respeite a patente.</em></h2>
+          <p>Do primeiro coldre ao comando. Consulte as armas autorizadas e as regras de porte de cada patente.</p>
+          <a id="openComparison" class="armory-hero-link" href="#comparison">Consultar relação completa <span aria-hidden="true">↗</span></a>
+          <div class="armory-folio"><span>15 ARMAMENTOS</span><span>5 CATEGORIAS</span><span>6 PATENTES</span></div>
+        </div>
+        <div class="armory-hero-art">
+          <div class="armory-photo-label"><span aria-hidden="true">★</span> ACERVO DO OESTE <span aria-hidden="true">★</span></div>
+          <img src="assets/armamentos/winchester.webp" width="960" height="540" alt="Winchester, conhecida como Lancaster no jogo, no compêndio de armamentos" fetchpriority="high">
+          <div class="armory-photo-caption"><span>WINCHESTER</span><small>Repetidora · Ação por alavanca</small></div>
+        </div>
+      </section>
+
+      <section class="rank-section" aria-labelledby="rankTitle">
+        <div class="armory-section-title"><div><span class="armory-kicker">01 / REGULAMENTO DE PORTE</span><h2 id="rankTitle">Qual patente deseja consultar?</h2></div><p>A consulta não altera a patente da sua conta.</p></div>
+        <div id="rankChoices" class="rank-choices" role="group" aria-label="Patente para consulta"></div>
+        <section class="rank-brief" aria-labelledby="selectedRankName">
+          <div id="selectedRankBadge" class="selected-rank-badge" aria-hidden="true"></div>
+          <div class="rank-brief-name"><span>PATENTE EM CONSULTA</span><h3 id="selectedRankName"></h3></div>
+          <dl class="rank-brief-facts"><div><dt>Modelos permitidos</dt><dd id="allowedCount"></dd></div><div><dt>Porte de coldre</dt><dd id="holsterRule"></dd></div><div><dt>Armas longas</dt><dd id="backRule"></dd></div></dl>
+          <p id="rankNote" class="rank-note"></p>
+        </section>
+      </section>
+
+      <section class="arsenal-section" aria-labelledby="arsenalTitle">
+        <div class="armory-section-title"><div><span class="armory-kicker">02 / CATÁLOGO ILUSTRADO</span><h2 id="arsenalTitle">O arsenal, em detalhes.</h2></div><label class="allowed-toggle"><input id="onlyAllowed" type="checkbox" checked><span>Mostrar apenas permitidos</span></label></div>
+        <div class="armory-filterbar"><label class="armory-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg><span class="sr-only">Buscar armamento</span><input id="weaponSearch" type="search" placeholder="Buscar pelo nome da arma…" autocomplete="off"></label><div id="categoryChoices" class="category-choices" role="group" aria-label="Categoria de armamento"></div></div>
+        <div class="arsenal-status"><p id="arsenalState" role="status" aria-live="polite"></p><button id="clearWeaponFilters" type="button" class="armory-text-button">Limpar filtros</button></div>
+        <div id="weaponGrid" class="weapon-grid"></div>
+      </section>
+
+      <details id="comparison" class="armory-comparison">
+        <summary><span><small>03 / RELAÇÃO PATENTE × ARMAMENTO</small><strong>O regulamento completo</strong></span><span class="comparison-plus" aria-hidden="true">+</span></summary>
+        <p>Permissões reproduzidas da relação enviada pelo Comando. Cada linha é independente: uma patente superior não herda automaticamente armas de outra.</p>
+        <div class="comparison-scroll" tabindex="0" role="region" aria-label="Relação completa por patente; role horizontalmente para consultar todas as categorias"><table class="armory-table"><caption>Armamentos permitidos por patente da Cavalaria do Oeste</caption><thead><tr><th scope="col">Patente</th><th scope="col">Revólveres</th><th scope="col">Pistolas</th><th scope="col">Repetidoras</th><th scope="col">Escopetas</th><th scope="col">Rifles</th><th scope="col">Observações de porte</th></tr></thead><tbody id="comparisonBody"></tbody></table></div>
+      </details>
+      <aside class="armory-discipline"><span aria-hidden="true">★</span><div><strong>Disciplina também se demonstra no porte.</strong><p>O uso indevido de armamentos ou o descumprimento deste regulamento está sujeito às sanções previstas na disciplina da Cavalaria do Oeste.</p></div></aside>
+      <footer class="armory-footer"><span>CAVALARIA DO OESTE <b aria-hidden="true">✦</b> HONRA E DISCIPLINA</span><p>Regras: relação de patente e armamento do Comando. Imagens do jogo: Rockstar Games, via <a href="https://www.gtabase.com/red-dead-redemption-2/weapons/" target="_blank" rel="noopener noreferrer">GTABase</a> e <a href="https://www.3dmgame.com/gl/3969648.html" target="_blank" rel="noopener noreferrer">3DMGame (M1899)</a>. Características descritivas; o balanceamento do servidor pode variar.</p></footer>
+    </div>
+    <noscript><p class="system-msg error">Ative o JavaScript para consultar o manual.</p></noscript>
+  </main>
+  <dialog id="weaponDialog" class="weapon-dialog" aria-labelledby="weaponDialogTitle">
+    <div class="weapon-dialog-top"><span>ACERVO DA CAVALARIA</span><button id="closeWeapon" type="button" aria-label="Fechar ficha do armamento">✕</button></div>
+    <div id="weaponDetails"></div>
+    <div class="weapon-dialog-footer"><span>RELAÇÃO DE PATENTE / ARMAMENTO</span><button id="doneWeapon" type="button">Voltar ao arsenal</button></div>
+  </dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="admin-shell.js"></script>
+  <script src="presenca.js"></script>
+  <script src="comum.js"></script>
+  <script src="armamentos-dados.js"></script>
+  <script src="armamentos.js"></script>
+</body>
+</html>

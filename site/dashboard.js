@@ -14,6 +14,7 @@
   const shortcuts = [
     ['registro', 'painel.html', 'Consultar efetivo', 'Situação, destinos e registros oficiais', 'registro'],
     ['treinamentos', 'treinamentos.html', 'Ver treinamentos', 'Materiais e instruções disponíveis', 'treinamentos'],
+    ['armamentos', 'armamentos.html', 'Consultar armamentos', 'Arsenal e permissões por patente', 'armamentos'],
     ['recrutamento', 'recrutamento.html', 'Conduzir recrutamento', 'Roteiro e fichas de candidatos', 'recrutamento'],
     ['avisos', 'avisos.html', 'Ler avisos', 'Comunicados oficiais do Comando', 'avisos'],
     ['acoes', 'acoes.html', 'Registrar ação', 'Confrontos, participantes e resultados', 'acoes'],
