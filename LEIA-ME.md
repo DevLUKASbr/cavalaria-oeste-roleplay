@@ -34,7 +34,7 @@ Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML exi
 
 ## Ações
 
-Todos os oficiais autorizados, incluindo Membro e Acesso limitado legado, podem registrar e consultar ações. O formulário pede ação, data e hora, quantidades do confronto, vitória ou derrota, nomes dos participantes e patente de quem registra. O relato é opcional. A lista de participantes deve conferir com a quantidade da Cavalaria e não aceita nomes repetidos. O responsável e o horário de registro vêm do servidor; a patente é declarada pelo oficial, pois não existe cadastro de patentes neste painel.
+Todos os oficiais autorizados, incluindo Membro e Acesso limitado legado, podem registrar e consultar ações. O formulário pede ação, data e hora, quantidade de oponentes, vitória ou derrota, seleção dos participantes e patente de quem registra. Os oficiais são marcados em caixas de seleção, com busca pelo Nome no RP cadastrado em Contas e permissões; a lista inclui todas as contas autorizadas, independentemente de estarem conectadas ou terem feito login. A quantidade da Cavalaria é preenchida automaticamente pela seleção. O relato é opcional. O responsável e o horário de registro vêm do servidor; a patente é declarada pelo oficial, pois não existe cadastro de patentes neste painel.
 
 Cada oficial pode corrigir seus próprios registros. Xerife, Sub-Xerife e Adm podem revisar qualquer registro, arquivar e restaurar; a autoria original é preservada. Ações arquivadas saem do livro e dos indicadores ativos, permanecendo acessíveis à liderança. Não há exclusão definitiva. Relatórios respeitam período, busca e resultado, considerando todas as páginas. O CSV é compatível com planilhas e neutraliza fórmulas em campos de texto. Datas são exibidas no horário de Brasília.
 

@@ -81,6 +81,8 @@ async function prepare(page, settings = {}) {
       const payload = request.method() === 'POST' ? request.postDataJSON() : null;
       calls.push({ path: url.pathname, payload, authenticated: request.headers().authorization === 'Bearer fixture-session' });
       if (url.pathname === '/api/acoes') {
+        const people = settings.actionOfficers || [{ id: 'test-official', nome: 'Morgan West', cargo: 'Membro' }, { id: 'john-official', nome: 'John Carter', cargo: 'Membro' }, { id: 'joao-official', nome: 'João do Oeste', cargo: 'Membro' }];
+        if (url.searchParams.get('oficiais') === '1') return route.fulfill({ status: settings.officersFail ? 502 : 200, json: settings.officersFail ? { erro: 'Falha fictícia ao carregar oficiais.' } : { oficiais: people } });
         if (settings.actionsFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao consultar ações.' } });
         if (payload && settings.actionSaveFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao salvar ação.' } });
         if (payload && settings.actionSaveDelay) await new Promise(resolve => setTimeout(resolve, settings.actionSaveDelay));
@@ -88,13 +90,17 @@ async function prepare(page, settings = {}) {
         const author = { id: 'test-official', nome: 'Morgan West', cargo: settings.cargo || 'Xerife', patente: payload?.patente };
         let saved;
         if (payload?.acao === 'criar') {
-          saved = { ...payload, id: 'fixture-action-' + actions.length, autor: author, criado_em: now, atualizado_em: null, arquivado_em: null, origem: 'manual' };
+          saved = { ...payload, participantes: payload.participantes_ids.map(id => people.find(person => person.id === id).nome), id: 'fixture-action-' + actions.length, autor: author, criado_em: now, atualizado_em: null, arquivado_em: null, origem: 'manual' };
           actions.push(saved);
         }
         if (payload && payload.acao !== 'criar') {
           const current = actions.find(item => item.id === payload.id);
           if (!current) return route.fulfill({ status: 404, json: { erro: 'Ação fictícia não encontrada.' } });
           saved = { ...current, ...(payload.acao === 'editar' ? payload : {}), autor: current.autor, atualizado_em: now, atualizado_por: author };
+          if (payload.acao === 'editar') {
+            const oldPeople = new Map(current.participantes.map((nome, i) => [current.participantes_ids?.[i] || `anterior:${i}`, nome]));
+            saved.participantes = payload.participantes_ids.map(id => oldPeople.get(id) || people.find(person => person.id === id)?.nome);
+          }
           if (payload.acao === 'arquivar') Object.assign(saved, { arquivado_em: now, arquivado_por: author });
           if (payload.acao === 'restaurar') Object.assign(saved, { arquivado_em: null, arquivado_por: null });
           actions = actions.map(item => item.id === saved.id ? saved : item);
