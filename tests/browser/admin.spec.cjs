@@ -35,7 +35,7 @@ test('Membro só vê módulos existentes autorizados e não consulta Registros',
   await prepare(page, { cargo: 'Membro' });
   await page.goto('/dashboard.html');
   await expect(page.getByRole('heading', { name: 'Bem-vindo, Morgan West' })).toBeVisible();
-  await expect(page.locator('.sidebar-nav a')).toHaveCount(3);
+  await expect(page.locator('.sidebar-nav a')).toHaveCount(4);
   await expect(page.locator('#dashboardState')).toContainText('restritos');
   const tables = await page.evaluate(() => window.__mock.calls.map(call => call.table));
   expect(tables).not.toContain('cavalaria_oficiais');
@@ -198,11 +198,11 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 390, height: 844 }
   });
 }
 
-test('módulos futuros são informativos e sino consulta avisos reais', async ({ page }) => {
+test('Ações abre o livro e sino consulta avisos reais', async ({ page }) => {
   await prepare(page);
   await page.goto('/acoes.html');
-  await expect(page.getByRole('heading', { name: 'Em desenvolvimento', exact: true })).toBeVisible();
-  await expect(page.locator('.construction form')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Registro de ações', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Registrar ação', exact: true })).toBeVisible();
   await expect(page.locator('.sidebar-future a')).toHaveCount(0);
   await page.getByRole('button', { name: 'Avisos oficiais', exact: true }).click();
   await expect(page.locator('#notificationsPanel')).toContainText('Nenhum aviso publicado');

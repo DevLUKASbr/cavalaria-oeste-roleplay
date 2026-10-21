@@ -47,13 +47,13 @@
     { id: 'avisos', href: 'avisos.html', title: 'Avisos' },
   ];
 
-  const FULL_ACCESS = [...PAGES.map(p => p.id), 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar', 'avisos.editar'];
+  const FULL_ACCESS = [...PAGES.map(p => p.id), 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar', 'avisos.editar', 'acoes.gerenciar'];
   const PERMISSIONS = {
     'Xerife': FULL_ACCESS,
     'Sub-Xerife': FULL_ACCESS,
     'Adm': FULL_ACCESS,
-    'Membro': ['treinamentos', 'avisos'],
-    'Acesso limitado': ['registro', 'avisos'], // contas antigas: leitura dos comunicados
+    'Membro': ['treinamentos', 'avisos', 'acoes'],
+    'Acesso limitado': ['registro', 'avisos', 'acoes'],
   };
   const CARGOS = ['Xerife', 'Sub-Xerife', 'Adm', 'Membro'];
 

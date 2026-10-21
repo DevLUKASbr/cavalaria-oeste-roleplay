@@ -9,7 +9,7 @@ const modules = Promise.all([
 ]);
 const serverEnv = { SUPABASE_URL: 'https://supabase.example.test', SUPABASE_SECRET_KEY: 'fixture-server-only' };
 const proxyEnv = { SUPABASE_FUNCTION_URL: 'https://edge.example.test/functions/v1/cavalaria-api' };
-const routes = ['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes'];
+const routes = ['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes', 'acoes'];
 const req = (path, { body, token = 'valid-session', method = body ? 'POST' : 'GET' } = {}) => new Request('https://site.example.test' + path, {
   method,
   headers: { ...(token ? { authorization: 'Bearer ' + token } : {}), 'content-type': 'application/json', cookie: 'private-cookie=fixture' },
@@ -74,6 +74,8 @@ test('a API Edge mantém a restrição de Membro em todos os módulos', async t 
   const { request } = await setup(t, { cargo: 'Membro' });
   assert.equal((await request('/api/avisos')).status, 200);
   assert.equal((await request('/api/treinamentos')).status, 200);
+  assert.equal((await request('/api/acoes')).status, 200);
+  assert.equal((await request('/api/acoes?arquivados=1')).status, 403);
   for (const route of ['contas', 'investigacoes', 'recrutamentos']) assert.equal((await request('/api/' + route)).status, 403);
   assert.equal((await request('/api/avisos?arquivados=1')).status, 403);
   assert.equal((await request('/api/avisos', { body: { acao: 'criar', titulo: 'Tentativa' } })).status, 403);

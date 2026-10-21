@@ -3,9 +3,10 @@ import contas from './handlers/contas.mjs';
 import treinamentos from './handlers/treinamentos.mjs';
 import recrutamentos from './handlers/recrutamentos.mjs';
 import investigacoes from './handlers/investigacoes.mjs';
+import acoes from './handlers/acoes.mjs';
 import { json } from './lib/acesso.mjs';
 
-const handlers = { avisos, contas, treinamentos, recrutamentos, investigacoes };
+const handlers = { avisos, contas, treinamentos, recrutamentos, investigacoes, acoes };
 
 // SUPABASE_SECRET_KEYS é injetado pelo Supabase. A chave não sai da Edge Function.
 export function edgeEnvironment(read) {

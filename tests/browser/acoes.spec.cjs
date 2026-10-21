@@ -1,0 +1,160 @@
+const { test, expect } = require('@playwright/test');
+const { readFileSync } = require('node:fs');
+const { prepare } = require('./fixtures.cjs');
+const helpers = require('../../site/acoes-dados.js');
+const today = helpers.dayKey();
+const sample = (id, extra = {}) => ({ id, titulo: 'Defesa de Valentine', ocorrido_em: today + 'T12:00:00.000Z', resultado: 'vitoria', cavalaria: 2, oponentes: 3, participantes: ['Morgan West', 'John Carter'], relato: 'Retomada da estação.', autor: { id: 'test-official', nome: 'Morgan West', cargo: 'Membro', patente: 'Soldado' }, criado_em: today + 'T14:00:00.000Z', atualizado_em: null, arquivado_em: null, ...extra });
+async function fill(page, values = {}) {
+  await page.locator('#actionTitle').fill(values.titulo || 'Defesa de Valentine');
+  await page.locator('#actionWhen').fill(today + 'T00:00');
+  await page.locator('#authorRank').fill('Sargento');
+  await page.locator('#actionCavalry').fill('2');
+  await page.locator('#actionOpponents').fill('3');
+  await page.getByLabel('↗ Vitória', { exact: true }).check();
+  await page.locator('#actionParticipants').fill(values.participantes || 'Morgan West\nJohn Carter');
+  await page.locator('#actionReport').fill('Retomada da estação.');
+}
+
+test('Membro registra confronto com participantes e encontra o registro após recarregar', async ({ page }) => {
+  const { calls } = await prepare(page, { cargo: 'Membro' });
+  await page.goto('/acoes.html');
+  await expect(page.locator('#actionState')).toHaveText('0 ações encontradas.');
+  await expect(page.locator('#archiveField')).toBeHidden();
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  await fill(page);
+  await expect(page.locator('#participantCount')).toContainText('2 de 2');
+  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
+  await expect(page.locator('#actionEditor')).not.toBeVisible();
+  await expect(page.locator('.action-card')).toContainText('Morgan West · Sargento');
+  await expect(page.locator('.confrontation strong')).toHaveText('2 × 3');
+  await expect(page.locator('#metricTotal')).toHaveText('1');
+  await expect(page.locator('#metricRate')).toHaveText('100%');
+  await expect(page.getByRole('button', { name: 'Arquivar', exact: true })).toHaveCount(0);
+  const post = calls.find(call => call.path === '/api/acoes' && call.payload?.acao === 'criar');
+  expect(post.authenticated).toBe(true);
+  expect(post.payload.participantes).toEqual(['Morgan West', 'John Carter']);
+  expect(post.payload.ocorrido_em).toBe(today + 'T03:00:00.000Z');
+  expect(post.payload.autor).toBeUndefined();
+  await page.reload();
+  await expect(page.locator('.action-card h3')).toHaveText('Defesa de Valentine');
+});
+
+test('quantidade e oficiais duplicados impedem envio; falha do servidor preserva o formulário', async ({ page }) => {
+  const settings = { cargo: 'Membro', actionSaveFail: true };
+  const { calls } = await prepare(page, settings);
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  await fill(page, { participantes: 'Morgan West' });
+  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
+  expect(calls.filter(call => call.payload?.acao === 'criar')).toHaveLength(0);
+  await page.locator('#actionParticipants').fill('Morgan West\n morgan  west');
+  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
+  expect(await page.locator('#actionParticipants').evaluate(node => node.validationMessage)).toContain('repetidos');
+  await page.locator('#actionParticipants').fill('Morgan West\nJohn Carter');
+  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
+  await expect(page.locator('#editorMessage')).toContainText('Falha fictícia');
+  await expect(page.locator('#actionTitle')).toHaveValue('Defesa de Valentine');
+  await expect(page.locator('#actionParticipants')).toHaveValue('Morgan West\nJohn Carter');
+  settings.actionSaveFail = false;
+  await page.getByRole('button', { name: 'Salvar ação', exact: true }).click();
+  await expect(page.locator('#actionEditor')).not.toBeVisible();
+  await expect(page.locator('.action-card')).toHaveCount(1);
+});
+
+test('oficial vê correção só dos próprios registros; edição mantém o autor original', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro', actions: [sample('action-own'), sample('action-other', { titulo: 'Ação de outro oficial', autor: { id: 'other', nome: 'Outro oficial', patente: 'Tenente' } })] });
+  await page.goto('/acoes.html');
+  await expect(page.getByRole('button', { name: 'Editar registro', exact: true })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Editar registro', exact: true }).click();
+  await page.locator('#actionTitle').fill('Defesa revisada');
+  await page.locator('#authorRank').fill('Cabo');
+  await page.getByLabel('↘ Derrota', { exact: true }).check();
+  await page.getByRole('button', { name: 'Salvar alterações', exact: true }).click();
+  const card = page.locator('.action-card', { hasText: 'Defesa revisada' });
+  await expect(card).toContainText('Morgan West · Soldado');
+  await card.locator('summary').click();
+  await expect(card).toContainText('Última alteração');
+  await expect(card).toContainText('Morgan West · Cabo');
+  await expect(card.locator('.result-badge')).toContainText('Derrota');
+});
+
+test('liderança arquiva e restaura; indicadores ativos seguem o livro', async ({ page }) => {
+  await prepare(page, { actions: [sample('action-archive')] });
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Arquivar', exact: true }).click();
+  await page.locator('#manageRank').fill('Tenente');
+  await page.getByRole('button', { name: 'Arquivar ação', exact: true }).click();
+  await expect(page.locator('#metricTotal')).toHaveText('0');
+  await page.locator('#archiveFilter').selectOption('1');
+  await expect(page.locator('.action-card')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Restaurar', exact: true }).click();
+  await page.getByRole('button', { name: 'Restaurar ação', exact: true }).click();
+  await expect(page.locator('.action-card')).toHaveCount(0);
+  await page.locator('#archiveFilter').selectOption('');
+  await expect(page.locator('#metricTotal')).toHaveText('1');
+});
+
+test('filtros, paginação e CSV consideram todos os resultados, não só a página visível', async ({ page }) => {
+  const records = Array.from({ length: 13 }, (_, i) => sample('report-action-' + i, { titulo: 'Ação ' + i, resultado: i === 12 ? 'derrota' : 'vitoria', participantes: ['Oficial ' + i, 'Morgan West'] }));
+  await prepare(page, { actions: records });
+  await page.goto('/acoes.html');
+  await expect(page.locator('#metricTotal')).toHaveText('13');
+  await expect(page.locator('.action-card')).toHaveCount(10);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Exportar CSV', exact: true }).click();
+  const csv = readFileSync(await (await downloadPromise).path(), 'utf8');
+  expect(csv).toContain('Ação 12');
+  expect(csv.split('\r\n')).toHaveLength(14);
+  await page.getByRole('button', { name: 'Próxima', exact: true }).click();
+  await expect(page.locator('.action-card')).toHaveCount(3);
+  await page.locator('#resultFilter').selectOption('derrota');
+  await expect(page.locator('#metricTotal')).toHaveText('1');
+  await expect(page.locator('#metricRate')).toHaveText('0%');
+  await page.locator('#actionSearch').fill('Oficial 12');
+  await expect(page.locator('.action-card h3')).toHaveText('Ação 12');
+  await page.locator('#dateFrom').fill('2099-01-01');
+  await expect(page.locator('#actionState')).toContainText('data inicial');
+  await expect(page.locator('#exportActions')).toBeDisabled();
+});
+
+test('falha na leitura não vira zero e permite tentar novamente', async ({ page }) => {
+  const settings = { actionsFail: true };
+  await prepare(page, settings);
+  await page.goto('/acoes.html');
+  await expect(page.locator('#actionState')).toContainText('Não foi possível');
+  await expect(page.locator('#metricTotal')).toHaveText('—');
+  await expect(page.locator('#exportActions')).toBeDisabled();
+  await expect(page.locator('#newAction')).toBeDisabled();
+  settings.actionsFail = false;
+  await page.getByRole('button', { name: 'Atualizar', exact: true }).click();
+  await expect(page.locator('#metricTotal')).toHaveText('0');
+  await expect(page.locator('#newAction')).toBeEnabled();
+});
+
+test('Início resume ações reais do mês sem consultar efetivo para Membro', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro', actions: [sample('dashboard-action'), sample('dashboard-loss', { resultado: 'derrota' }), sample('dashboard-old', { ocorrido_em: '2020-01-01T12:00:00Z' })] });
+  await page.goto('/dashboard.html');
+  await expect(page.locator('#dashboardActions')).toContainText('2 ações registradas');
+  await expect(page.locator('#dashboardActions')).toContainText('50% de vitórias');
+  const tables = await page.evaluate(() => window.__mock.calls.map(call => call.table));
+  expect(tables).not.toContain('cavalaria_oficiais');
+});
+
+test('desktop e celular mantêm formulário acessível e sem rolagem horizontal', async ({ page }) => {
+  await prepare(page, { actions: [sample('visual-victory'), sample('visual-loss', { titulo: 'Confronto na estrada de Rhodes', resultado: 'derrota', oponentes: 2 })] });
+  for (const viewport of [{ width: 1440, height: 1050 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/acoes.html');
+    await expect(page.locator('.action-card')).toHaveCount(2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/acoes-${viewport.width}.png`, fullPage: true });
+    await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+    await fill(page);
+    await expect(page.locator('#saveAction')).toBeInViewport();
+    expect(await page.locator('#actionEditor').evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    await page.screenshot({ path: `test-results/acoes-editor-${viewport.width}.png` });
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await expect(page.locator('#actionEditor')).not.toBeVisible();
+  }
+});

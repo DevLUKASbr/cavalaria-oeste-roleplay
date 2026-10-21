@@ -69,6 +69,7 @@ async function prepare(page, settings = {}) {
   let groups = [];
   let links = [];
   let notices = settings.notices || [];
+  let actions = settings.actions || [];
   await page.addInitScript(value => { window.__testSettings = value; }, settings);
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -79,6 +80,27 @@ async function prepare(page, settings = {}) {
       const request = route.request();
       const payload = request.method() === 'POST' ? request.postDataJSON() : null;
       calls.push({ path: url.pathname, payload, authenticated: request.headers().authorization === 'Bearer fixture-session' });
+      if (url.pathname === '/api/acoes') {
+        if (settings.actionsFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao consultar ações.' } });
+        if (payload && settings.actionSaveFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao salvar ação.' } });
+        if (payload && settings.actionSaveDelay) await new Promise(resolve => setTimeout(resolve, settings.actionSaveDelay));
+        const now = new Date().toISOString();
+        const author = { id: 'test-official', nome: 'Morgan West', cargo: settings.cargo || 'Xerife', patente: payload?.patente };
+        let saved;
+        if (payload?.acao === 'criar') {
+          saved = { ...payload, id: 'fixture-action-' + actions.length, autor: author, criado_em: now, atualizado_em: null, arquivado_em: null, origem: 'manual' };
+          actions.push(saved);
+        }
+        if (payload && payload.acao !== 'criar') {
+          const current = actions.find(item => item.id === payload.id);
+          if (!current) return route.fulfill({ status: 404, json: { erro: 'Ação fictícia não encontrada.' } });
+          saved = { ...current, ...(payload.acao === 'editar' ? payload : {}), autor: current.autor, atualizado_em: now, atualizado_por: author };
+          if (payload.acao === 'arquivar') Object.assign(saved, { arquivado_em: now, arquivado_por: author });
+          if (payload.acao === 'restaurar') Object.assign(saved, { arquivado_em: null, arquivado_por: null });
+          actions = actions.map(item => item.id === saved.id ? saved : item);
+        }
+        return route.fulfill({ status: payload?.acao === 'criar' ? 201 : 200, json: payload ? { acao: saved } : { acoes: actions.filter(item => Boolean(item.arquivado_em) === (url.searchParams.get('arquivados') === '1')).sort((a,b) => b.ocorrido_em.localeCompare(a.ocorrido_em)) } });
+      }
       if (url.pathname === '/api/avisos') {
         if (settings.noticesFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao acessar avisos.' } });
         if (payload && settings.noticeSaveFail) return route.fulfill({ status: 502, json: { erro: 'Falha fictícia ao publicar aviso.' } });

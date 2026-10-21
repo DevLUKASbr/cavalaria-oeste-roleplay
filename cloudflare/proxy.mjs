@@ -1,5 +1,5 @@
 // Cloudflare encaminha somente a sessão do usuário. Não recebe a chave administrativa.
-const ENDPOINTS = new Set(['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes']);
+const ENDPOINTS = new Set(['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes', 'acoes']);
 const SECURITY_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'no-store',

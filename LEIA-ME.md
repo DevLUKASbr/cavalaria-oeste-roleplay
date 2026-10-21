@@ -24,13 +24,21 @@ O guia de publicação e manutenção está em [docs/MIGRACAO_CLOUDFLARE.md](doc
 | `treinamentos.html` | Xerife, Sub-Xerife, Adm (criam e editam) · Membro (só lê) | Tópicos de treinamento com título, subtítulo, descrição e vídeos |
 | `recrutamento.html` | Xerife, Sub-Xerife, Adm | Roteiro do recrutamento e fichas dos candidatos |
 | `investigacoes.html` | Xerife, Sub-Xerife, Adm | Mapa do Oeste com alvos (pessoas e pontos de interesse) e grupos/territórios |
-| `acoes.html` | Xerife, Sub-Xerife, Adm | **Em construção** |
+| `acoes.html` | todos os oficiais autorizados | Livro de ações: confronto, vitória/derrota, participantes, autoria e patente; filtros, indicadores e CSV |
 | `avisos.html` | todos os cargos autorizados leem; Xerife, Sub-Xerife e Adm gerenciam | Publicar, editar, buscar, arquivar e republicar comunicados com prioridade e identificação do autor |
 | `contas.html` | Xerife, Sub-Xerife, Adm | Criar contas, definir nome e cargo, tirar acesso, gerar nova senha |
 
 O menu de cada pessoa mostra só as páginas que o cargo dela permite. Quem abre uma página sem permissão é levado para a primeira página permitida.
 
 Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML existentes, com sidebar e topbar compartilhadas; a sessão individual continua persistida pelo Supabase. O Dashboard de quem não pode ver Registros não consulta efetivo nem auditoria. Premiações permanece como indicação de etapa futura. Os avisos publicados aparecem no Início, no sino e na aba Avisos.
+
+## Ações
+
+Todos os oficiais autorizados, incluindo Membro e Acesso limitado legado, podem registrar e consultar ações. O formulário pede ação, data e hora, quantidades do confronto, vitória ou derrota, nomes dos participantes e patente de quem registra. O relato é opcional. A lista de participantes deve conferir com a quantidade da Cavalaria e não aceita nomes repetidos. O responsável e o horário de registro vêm do servidor; a patente é declarada pelo oficial, pois não existe cadastro de patentes neste painel.
+
+Cada oficial pode corrigir seus próprios registros. Xerife, Sub-Xerife e Adm podem revisar qualquer registro, arquivar e restaurar; a autoria original é preservada. Ações arquivadas saem do livro e dos indicadores ativos, permanecendo acessíveis à liderança. Não há exclusão definitiva. Relatórios respeitam período, busca e resultado, considerando todas as páginas. O CSV é compatível com planilhas e neutraliza fórmulas em campos de texto. Datas são exibidas no horário de Brasília.
+
+O Início resume as ações do mês. Os dados ficam na pasta privada `acoes/` do bucket `cavalaria`, com paginação e leitura completa para relatórios maiores que mil ações. Nenhuma tabela, conta ou política RLS nova é necessária. A API deve ser publicada junto com as páginas; conferir [docs/ACOES.md](docs/ACOES.md) antes de alterar a integração. Discord e importação do livro do jogo são etapas futuras, ainda sem endpoint ou credencial configurados.
 
 ## Avisos
 
@@ -61,7 +69,7 @@ Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais a
 | **Xerife** | Sheriff da Cavalaria | todas as páginas |
 | **Sub-Xerife** | Sub-Sheriff | todas as páginas |
 | **Adm** | administra o site (não é cargo do RP) | todas as páginas |
-| **Membro** | demais integrantes | Lê Treinamentos e Avisos publicados; não edita nem acessa dados administrativos. |
+| **Membro** | demais integrantes | Lê Treinamentos e Avisos; registra/consulta Ações e corrige as próprias. Não acessa Registros, Contas, Recrutamento ou Investigações. |
 
 O cargo é escolhido em **Contas** e aparece na barra de cima do site.
 

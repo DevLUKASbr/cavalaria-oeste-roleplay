@@ -12,14 +12,14 @@
 // ---------------------------------------------------------------------------
 
 export const PAGES = ['registro', 'treinamentos', 'recrutamento', 'investigacoes', 'acoes', 'contas', 'avisos'];
-const FULL_ACCESS = [...PAGES, 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar', 'avisos.editar'];
+const FULL_ACCESS = [...PAGES, 'treinamentos.editar', 'recrutamento.editar', 'investigacoes.editar', 'avisos.editar', 'acoes.gerenciar'];
 
 export const PERMISSOES = {
   'Xerife': FULL_ACCESS,
   'Sub-Xerife': FULL_ACCESS,
   'Adm': FULL_ACCESS,
-  'Membro': ['treinamentos', 'avisos'],
-  'Acesso limitado': ['registro', 'avisos'], // contas antigas: leitura dos comunicados
+  'Membro': ['treinamentos', 'avisos', 'acoes'],
+  'Acesso limitado': ['registro', 'avisos', 'acoes'], // contas legadas também registram ações
 };
 
 // Cargo → nível em public.cavalaria_membros, a tabela que as regras RLS do registro consultam.

@@ -28,7 +28,7 @@
     { id: 'treinamentos', href: 'treinamentos.html', title: 'Treinamentos', subtitle: 'Instruções e materiais da Cavalaria', icon: 'treinamentos' },
     { id: 'recrutamento', href: 'recrutamento.html', title: 'Recrutamento', subtitle: 'Roteiro e fichas de candidatos', icon: 'recrutamento' },
     { id: 'investigacoes', href: 'investigacoes.html', title: 'Investigações', subtitle: 'Alvos, grupos e mapa de RP', icon: 'investigacoes' },
-    { id: 'acoes', href: 'acoes.html', title: 'Ações', subtitle: 'Operações e ocorrências de RP', icon: 'acoes', development: true },
+    { id: 'acoes', href: 'acoes.html', title: 'Ações', subtitle: 'Livro de ações, confrontos e resultados', icon: 'acoes' },
     { id: 'avisos', href: 'avisos.html', title: 'Avisos', subtitle: 'Comunicados oficiais para a Cavalaria', icon: 'avisos' },
     { id: 'contas', href: 'contas.html', title: 'Contas e permissões', subtitle: 'Gerenciamento dos acessos existentes', icon: 'contas' },
   ];
