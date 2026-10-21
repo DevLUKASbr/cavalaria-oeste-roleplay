@@ -35,7 +35,7 @@ test('Membro só vê módulos existentes autorizados e não consulta Registros',
   await prepare(page, { cargo: 'Membro' });
   await page.goto('/dashboard.html');
   await expect(page.getByRole('heading', { name: 'Bem-vindo, Morgan West' })).toBeVisible();
-  await expect(page.locator('.sidebar-nav a')).toHaveCount(4);
+  await expect(page.locator('.sidebar-nav a')).toHaveCount(5);
   await expect(page.locator('#dashboardState')).toContainText('restritos');
   const tables = await page.evaluate(() => window.__mock.calls.map(call => call.table));
   expect(tables).not.toContain('cavalaria_oficiais');

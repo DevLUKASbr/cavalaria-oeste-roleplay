@@ -1,3 +1,13 @@
+# Manual de Armamentos — 21/10/2026
+
+Módulo de consulta com 15 armas, cinco categorias e seis patentes, fiel à tabela enviada pelo proprietário. As diferenças de Henry, Volcanic e Mauser são mantidas exatamente, conforme confirmação expressa; não há herança automática. Fotos reais dos modelos do jogo, características descritivas, fichas com permissões por patente, busca por nome/alias, filtros e relação completa.
+
+Identidade visual verde, dourado e papel, insígnias e fotografias de compêndio. Menu e atalhos integrados para todos os cargos autorizados. Escolha de patente é apenas consulta: não altera cargos, contas ou registros. Sem novo endpoint, SQL ou regra RLS. Fontes e operação em [docs/ARMAMENTOS.md](docs/ARMAMENTOS.md) e [créditos das imagens](docs/ARMAMENTOS-IMAGENS.md).
+
+Validação: 90 testes de servidor/cliente e 57 testes Chromium aprovados; builds Edge e Cloudflare compilados. Revisão em 320, 390, 768 e 1440 px, imagens locais conferidas, fichas com Escape/retorno de foco e matriz de permissões testada contra a tabela.
+
+---
+
 # Presença dos oficiais no painel — 21/10/2026
 
 Seleção de participantes mantém todos os oficiais e exibe Online no painel, Offline ou Status indisponível. Atividade confirmada em uma página interna visível renova a presença a cada 45 segundos. A presença expira dois minutos após a última confirmação, sem usar último login nem medir a conexão no jogo. Consulta automática enquanto o formulário estiver aberto preserva seleção, foco e rascunho; falhas não bloqueiam o registro da ação.
