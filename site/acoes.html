@@ -7,39 +7,63 @@
   <link rel="icon" href="logo-oeste.png">
   <link rel="stylesheet" href="estilo.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="acoes.css">
 </head>
 <body class="admin-page" data-pagina="acoes">
 <div id="shell"></div>
 <main class="wrap" id="mainContent" tabindex="-1">
-  <article class="paper">
-    <header class="masthead">
-      <div class="eyebrow">Território do Oeste · Ordem e Justiça</div>
-      <img class="badge-star server-logo" src="logo-oeste.png" alt="Logo Oeste Roleplay">
-      <h1>Ações</h1>
-      <div class="subtitle">Ações e operações da Cavalaria · Oeste Roleplay</div>
-      <div class="rule">✦</div>
-    </header>
-
-    <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
-
-    <div id="private" class="hide">
-      <section class="construction">
-        <h2>Em desenvolvimento</h2>
-        <p>O registro de operações, participantes e resultados de RP será disponibilizado após a definição dos dados e critérios pelo Alto Comando. Nenhuma ação ou contagem de abates é registrada nesta fase.</p>
-      </section>
-    </div>
-
-    <footer class="footer">
-      <strong>Disciplina · Honra · Hierarquia · Justiça</strong>
-      <p class="footnote">Oeste Roleplay · Registro reservado da Cavalaria</p>
-    </footer>
-  </article>
+  <div id="message" class="system-msg hide" role="status" aria-live="polite"></div>
+  <div id="private" class="hide actions-page">
+    <section class="actions-hero" aria-labelledby="bookTitle">
+      <div><span class="actions-eyebrow">OPERAÇÕES DA CAVALARIA</span><h2 id="bookTitle">O campo passa.<br>O registro fica.</h2><p>Confrontos, oficiais e resultados.<br>A história de cada ação, em um só livro.</p></div>
+      <div class="hero-action"><span class="book-emblem" aria-hidden="true">✦</span><button class="btn" id="newAction" type="button"><span aria-hidden="true">＋</span> Registrar ação</button><small>Todo oficial pode contribuir.</small></div>
+    </section>
+    <section class="action-metrics" aria-label="Resumo das ações filtradas">
+      <article><span>Ações registradas</span><strong id="metricTotal">—</strong><small>No período selecionado</small></article>
+      <article class="metric-victory"><span>Vitórias</span><strong id="metricWins">—</strong><small>Confrontos ganhos</small></article>
+      <article class="metric-defeat"><span>Derrotas</span><strong id="metricLosses">—</strong><small>Confrontos perdidos</small></article>
+      <article><span>Taxa de vitória</span><strong id="metricRate">—</strong><small id="metricPeople">Sem dados carregados</small></article>
+    </section>
+    <section class="action-book" aria-labelledby="ledgerTitle">
+      <header class="book-heading"><div><span class="actions-eyebrow">LIVRO DA CAVALARIA</span><h2 id="ledgerTitle">Registro de ações</h2><p>Consulte o ocorrido. Acompanhe os resultados.</p></div><div class="book-tools"><button class="btn secondary" id="exportActions" type="button" disabled>Exportar CSV</button><button class="btn secondary" id="refreshActions" type="button">Atualizar</button></div></header>
+      <div class="action-filters">
+        <label class="action-search"><span>Buscar no livro</span><input id="actionSearch" type="search" placeholder="Ação, oficial ou responsável…"></label>
+        <label><span>De</span><input id="dateFrom" type="date"></label>
+        <label><span>Até</span><input id="dateTo" type="date"></label>
+        <label><span>Resultado</span><select id="resultFilter"><option value="">Todos</option><option value="vitoria">Vitória</option><option value="derrota">Derrota</option></select></label>
+        <label id="archiveField" class="hide"><span>Exibir</span><select id="archiveFilter"><option value="">No livro</option><option value="1">Arquivadas</option></select></label>
+      </div>
+      <div class="book-caption"><p id="actionState" role="status" aria-live="polite">Carregando ações…</p><button type="button" id="clearFilters" class="text-button">Limpar filtros</button></div>
+      <div id="actionList" class="action-list" aria-label="Ações registradas"></div>
+      <nav class="action-pagination" aria-label="Paginação das ações"><button id="previousPage" class="btn secondary" type="button" disabled>Anterior</button><span id="pageState" aria-live="polite"></span><button id="nextPage" class="btn secondary" type="button" disabled>Próxima</button></nav>
+      <p class="report-note">Os indicadores e o CSV seguem os filtros acima e consideram todas as páginas. Datas no horário de Brasília. Ações arquivadas ficam fora do livro e dos indicadores ativos.</p>
+    </section>
+  </div>
 </main>
-
+<dialog id="actionEditor" class="action-dialog" aria-labelledby="editorTitle">
+  <header class="editor-heading"><div><span class="actions-eyebrow">LIVRO DA CAVALARIA</span><h2 id="editorTitle">Registrar ação</h2><p>Um registro completo dá contexto ao resultado.</p></div><button type="button" id="closeAction" class="icon-button" aria-label="Fechar registro de ação">×</button></header>
+  <form id="actionForm">
+    <div class="editor-body">
+      <p id="editorMessage" class="system-msg error hide" role="alert"></p>
+      <div class="action-form-grid">
+        <label class="wide"><span>Ação *</span><input id="actionTitle" required minlength="3" maxlength="160" placeholder="Ex.: Defesa do banco de Valentine"></label>
+        <label><span>Data e hora da ação *</span><input id="actionWhen" type="datetime-local" required min="2020-01-01T00:00"><small>Horário de Brasília.</small></label>
+        <label><span>Sua patente no momento *</span><input id="authorRank" required minlength="2" maxlength="80" placeholder="Ex.: Soldado, Sargento, Tenente"><small id="registrarName"></small></label>
+      </div>
+      <fieldset class="confrontation-field"><legend>O confronto</legend><div class="confrontation-grid"><label><span>Oficiais da Cavalaria *</span><input id="actionCavalry" type="number" required min="1" max="200" step="1" value="2"></label><strong class="versus" aria-hidden="true">×</strong><label><span>Oponentes *</span><input id="actionOpponents" type="number" required min="1" max="200" step="1" value="2"></label></div><fieldset class="result-choices"><legend>Resultado *</legend><label><input type="radio" name="actionResult" value="vitoria" required><span>↗ Vitória</span></label><label><input type="radio" name="actionResult" value="derrota" required><span>↘ Derrota</span></label></fieldset></fieldset>
+      <label class="participants-field"><span>Oficiais participantes *</span><textarea id="actionParticipants" required maxlength="20500" rows="4" placeholder="Um nome por linha. Ex.:&#10;Morgan West&#10;John Carter" aria-describedby="participantHelp participantCount"></textarea><small id="participantHelp">Informe todos os nomes no RP, incluindo o seu se participou. A quantidade deve conferir com o confronto.</small><strong id="participantCount" role="status" aria-live="polite">0 de 2 oficiais informados</strong></label>
+      <label><span>Relato da ação <small>(opcional)</small></span><textarea id="actionReport" rows="4" maxlength="5000" placeholder="Descreva o que aconteceu, o local e as informações relevantes…"></textarea></label>
+      <div class="registration-note"><span aria-hidden="true">✦</span><p>O responsável e a data do registro serão identificados automaticamente. Confira o resultado e os participantes antes de salvar.</p></div>
+    </div>
+    <footer class="editor-footer"><span id="confrontationPreview">Confronto 2 × 2</span><div><button class="btn secondary" type="button" id="cancelAction">Cancelar</button><button class="btn" type="submit" id="saveAction">Salvar ação</button></div></footer>
+  </form>
+</dialog>
+<dialog id="manageDialog" class="action-dialog management-dialog" aria-labelledby="manageTitle"><form id="manageForm"><header class="editor-heading"><div><h2 id="manageTitle">Arquivar ação</h2><p id="manageDescription"></p></div></header><div class="editor-body"><p id="manageMessage" class="system-msg error hide" role="alert"></p><label><span>Sua patente no momento *</span><input id="manageRank" required minlength="2" maxlength="80"></label><p id="manageHelp"></p></div><footer class="editor-footer"><button class="btn secondary" type="button" id="cancelManage">Cancelar</button><button class="btn" type="submit" id="confirmManage">Confirmar</button></footer></form></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="admin-shell.js"></script>
 <script src="comum.js"></script>
-<script src="construcao.js"></script>
+<script src="acoes-dados.js"></script>
+<script src="acoes.js"></script>
 </body>
 </html>

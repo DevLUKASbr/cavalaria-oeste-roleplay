@@ -1,3 +1,20 @@
+# Livro de Ações — 21/10/2026
+
+Módulo implementado na branch `feature/acoes-cavalaria`, a partir da `main` em `56a992b`. Todos os oficiais autorizados podem registrar e consultar ações, conforme escolha do proprietário. Cada autor corrige os próprios registros; liderança pode revisar, arquivar e restaurar qualquer ação.
+
+- Registro com ação, data/hora, vitória ou derrota, quantidades de Cavalaria e oponentes, nomes dos participantes, patente declarada do responsável e relato opcional. A quantidade da Cavalaria deve conferir com os nomes, sem duplicatas.
+- Nome do responsável, cargo de acesso e data de criação conferidos no servidor. Edição preserva autoria original e identifica a última alteração. A patente declarada não concede acesso.
+- Livro com busca, filtros inclusivos de período/resultado, paginação visual, indicadores e CSV completo dos resultados filtrados, com proteção contra fórmulas. Ações arquivadas ficam separadas, acessíveis à liderança.
+- Ações do mês no Início, sem consultar o efetivo para Membros. Menu e orientação de Contas atualizados.
+- API em `supabase/functions/_shared/handlers/acoes.mjs`, rota no Edge router e proxy Cloudflare, adaptador Netlify e pasta privada `acoes/` no bucket existente. Leitura paginada além de mil registros com paralelismo de oito; falhas não viram relatórios parciais ou zero enganoso. Nenhuma tabela, conta ou política RLS nova.
+- Origem manual e referência externa reservadas para integração futura. Discord, bot e importação do livro do jogo ainda não estão conectados.
+
+Validação: **69 testes de servidor** e **45 testes Chromium** aprovados; builds Edge e Cloudflare compilados; telas desktop e celular revisadas. Os fluxos de gravação, correção, arquivamento, restauração e relatórios usam dados simulados. A API foi atualizada no Supabase pelo editor com correspondência exata ao bundle validado; as seis rotas responderam 401 sem sessão. Nenhum registro fictício foi criado em produção.
+
+Guia técnico: [docs/ACOES.md](docs/ACOES.md). A publicação das páginas acompanha a `main` pela Cloudflare. O workflow de atualização da API continua dependendo de `SUPABASE_ACCESS_TOKEN`; enquanto não configurado, publicar a função manualmente pelo editor Supabase antes do merge.
+
+---
+
 # Migração Cloudflare Pages + Supabase — 20/10/2026
 
 **Publicado em https://cavalaria-oeste-roleplay.pages.dev/**. O PR #15 foi integrado à `main` em `5e13cff`; o primeiro deploy Cloudflare foi `9b9474cb-22ba-428c-a674-1466ea31a199`. A integração GitHub foi autorizada somente para este repositório, com publicação automática da `main`. A função `cavalaria-api` foi publicada no projeto Supabase existente. Nenhuma alteração em tabelas, contas, políticas RLS ou dados reais foi executada.

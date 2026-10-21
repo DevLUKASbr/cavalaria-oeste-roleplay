@@ -16,6 +16,7 @@
     ['treinamentos', 'treinamentos.html', 'Ver treinamentos', 'Materiais e instruções disponíveis', 'treinamentos'],
     ['recrutamento', 'recrutamento.html', 'Conduzir recrutamento', 'Roteiro e fichas de candidatos', 'recrutamento'],
     ['avisos', 'avisos.html', 'Ler avisos', 'Comunicados oficiais do Comando', 'avisos'],
+    ['acoes', 'acoes.html', 'Registrar ação', 'Confrontos, participantes e resultados', 'acoes'],
     ['contas', 'contas.html', 'Gerenciar contas', 'Contas individuais e acessos existentes', 'contas'],
   ];
   $('quickActions').innerHTML = shortcuts.filter(([permission]) => can(access, permission)).map(([, href, title, description, glyph]) => `<a href="${href}">${icon(glyph)}<span><strong>${title}</strong><small>${description}</small></span>${icon('arrow')}</a>`).join('');
@@ -96,6 +97,21 @@
     $('refreshDashboardNotices').disabled = false;
   }
   $('refreshDashboardNotices').addEventListener('click', refreshNotices);
+  async function refreshActions() {
+    if (!can(access, 'acoes')) { $('dashboardActions').textContent = 'O livro não está disponível para seu acesso.'; $('refreshDashboardActions').hidden = true; return; }
+    $('refreshDashboardActions').disabled = true;
+    $('dashboardActions').textContent = 'Carregando ações…';
+    try {
+      const { acoes } = await api('acoes');
+      if (!Array.isArray(acoes)) throw new Error('Livro indisponível');
+      const helpers = window.CavalariaAcoes, today = helpers.dayKey();
+      const stats = helpers.stats(helpers.filter(acoes, { from: today.slice(0, 8) + '01', to: today }));
+      $('dashboardActions').innerHTML = stats.total ? `<p><strong>${stats.total} ${stats.total === 1 ? 'ação registrada' : 'ações registradas'}</strong> · ${stats.wins} ${stats.wins === 1 ? 'vitória' : 'vitórias'} · ${stats.losses} ${stats.losses === 1 ? 'derrota' : 'derrotas'}</p><p class="chart-note">${stats.rate}% de vitórias · ${stats.officers} oficiais participantes neste mês. Ações arquivadas não entram nos indicadores.</p>` : empty('Nenhuma ação registrada neste mês. O livro está aberto para todos os oficiais.');
+    } catch { $('dashboardActions').innerHTML = empty('Não foi possível carregar as ações. Use Atualizar ações para tentar novamente.'); }
+    finally { $('refreshDashboardActions').disabled = false; }
+  }
+  $('refreshDashboardActions').addEventListener('click', refreshActions);
+  refreshActions();
   refreshNotices();
   window.Cavalaria.setHidden('private', false);
   await refresh();

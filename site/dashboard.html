@@ -28,8 +28,8 @@
         <section class="dashboard-card" aria-labelledby="activityTitle"><div class="card-heading"><h2 id="activityTitle">Atividades recentes</h2><span class="card-caption">Auditoria do Registro</span></div><div id="recentActivity"></div></section>
         <section class="dashboard-card" aria-labelledby="announcementsTitle"><div class="card-heading"><h2 id="announcementsTitle">Avisos do Alto Comando</h2><a href="avisos.html">Ver todos</a></div><div id="dashboardNotices" role="status" aria-live="polite"></div><button id="refreshDashboardNotices" class="btn secondary" type="button">Atualizar avisos</button></section>
         <section class="dashboard-card" aria-labelledby="shortcutsTitle"><div class="card-heading"><h2 id="shortcutsTitle">Acesso rápido</h2><span class="card-caption">Seus módulos</span></div><div id="quickActions" class="quick-actions"></div></section>
-        <section class="dashboard-card" aria-labelledby="operationsTitle"><div class="card-heading"><h2 id="operationsTitle">Operações por período</h2></div><div class="empty-state compact"><span class="empty-icon" data-icon="chart"></span><h3>Histórico de operações ainda não disponível</h3><p>O módulo de Ações está em desenvolvimento. A auditoria do efetivo não representa operações de RP.</p></div></section>
-        <section class="dashboard-card" aria-labelledby="rankingTitle"><div class="card-heading"><h2 id="rankingTitle">Reconhecimento e participação</h2></div><div class="empty-state compact"><span class="empty-icon" data-icon="premios"></span><h3>Rankings aguardam registros e critérios</h3><p>Não há contagem validada de ações, presenças ou abates. Rankings de RP serão exibidos quando houver dados e regras aprovadas.</p></div></section>
+        <section class="dashboard-card" aria-labelledby="operationsTitle"><div class="card-heading"><h2 id="operationsTitle">Ações neste mês</h2><a href="acoes.html">Abrir livro</a></div><div id="dashboardActions" role="status" aria-live="polite">Carregando ações…</div><button id="refreshDashboardActions" class="btn secondary" type="button">Atualizar ações</button></section>
+        <section class="dashboard-card" aria-labelledby="rankingTitle"><div class="card-heading"><h2 id="rankingTitle">Reconhecimento e participação</h2></div><div class="empty-state compact"><span class="empty-icon" data-icon="premios"></span><h3>Rankings aguardam registros e critérios</h3><p>Consulte participações no Livro de Ações. Premiações e rankings de RP dependem de critérios aprovados pelo Comando.</p></div></section>
       </div>
       <footer class="dashboard-footer">Cavalaria Oeste Roleplay <span>Disciplina, honra e responsabilidade em cada registro.</span></footer>
     </div>
@@ -39,6 +39,7 @@
   <script src="config.js"></script>
   <script src="admin-shell.js"></script>
   <script src="comum.js"></script>
+  <script src="acoes-dados.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>
