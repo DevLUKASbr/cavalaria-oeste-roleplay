@@ -80,6 +80,11 @@ async function prepare(page, settings = {}) {
       const request = route.request();
       const payload = request.method() === 'POST' ? request.postDataJSON() : null;
       calls.push({ path: url.pathname, payload, authenticated: request.headers().authorization === 'Bearer fixture-session' });
+      if (url.pathname === '/api/presenca') {
+        if (settings.presenceFail) return route.fulfill({ status: 502, json: { erro: 'Presença indisponível.' } });
+        const now = new Date();
+        return route.fulfill({ json: payload ? { confirmado: true } : { servidor_em: now.toISOString(), online: (settings.onlineIds || ['test-official']).map(id => ({ id, expira_em: new Date(now.getTime() + (settings.presenceTTL ?? 120000)).toISOString() })) } });
+      }
       if (url.pathname === '/api/acoes') {
         const people = settings.actionOfficers || [{ id: 'test-official', nome: 'Morgan West', cargo: 'Membro' }, { id: 'john-official', nome: 'John Carter', cargo: 'Membro' }, { id: 'joao-official', nome: 'João do Oeste', cargo: 'Membro' }];
         if (url.searchParams.get('oficiais') === '1') return route.fulfill({ status: settings.officersFail ? 502 : 200, json: settings.officersFail ? { erro: 'Falha fictícia ao carregar oficiais.' } : { oficiais: people } });

@@ -10,6 +10,7 @@
   const pageSize = 10;
   let records = [], matched = [], loaded = false, busy = false, page = 1, editingId = null, initialDraft = '', lastRank = '', management = null;
   let officers = [], selected = new Map(), historical = new Map(), officersReady = false, officersLoading = false, officersError = '', officerRequest = 0;
+  let presence = new Map(), presenceValidUntil = 0, presenceLoading = false, presenceGeneration = 0, presenceTimer = null, nextPresenceLoad = 0, presenceController = null;
   const today = data.dayKey();
   $('dateFrom').value = today.slice(0, 8) + '01';
   $('dateTo').value = today;
@@ -35,11 +36,58 @@
     const shown = [...choices.entries()].filter(([, person]) => !term || searchKey(person.nome).includes(term)).sort((a,b) => a[1].nome.localeCompare(b[1].nome, 'pt-BR'));
     $('officerState').textContent = officersLoading ? 'Carregando oficiais…' : officersError || (!choices.size ? 'Nenhum oficial disponível. Solicite à liderança o cadastro do nome no RP em Contas e permissões.' : `${shown.length} ${shown.length === 1 ? 'oficial na lista' : 'oficiais na lista'}${term ? ' para esta busca' : ''}.`);
     $('officerState').classList.toggle('is-error', Boolean(officersError));
-    $('officerList').innerHTML = shown.map(([id, person]) => `<label class="officer-option${selected.has(id) ? ' is-selected' : ''}"><input type="checkbox" data-officer="${esc(id)}" aria-label="${esc(person.nome)}" ${selected.has(id) ? 'checked' : ''} ${busy || officersLoading || !officersReady ? 'disabled' : ''}><span><strong>${esc(person.nome)}</strong><small>${person.historical ? 'Participante do registro original' : person.unavailable ? 'Não disponível para novos registros' : esc(person.cargo || 'Oficial')}</small></span></label>`).join('');
+    $('officerList').innerHTML = shown.map(([id, person]) => `<label class="officer-option${selected.has(id) ? ' is-selected' : ''}"><input type="checkbox" data-officer="${esc(id)}" aria-label="${esc(person.nome)}" ${selected.has(id) ? 'checked' : ''} ${busy || officersLoading || !officersReady ? 'disabled' : ''}><span><strong>${esc(person.nome)}</strong><small>${person.historical ? 'Participante do registro original' : person.unavailable ? 'Não disponível para novos registros' : esc(person.cargo || 'Oficial')}</small>${!person.historical && !person.unavailable ? `<span class="presence-badge" data-presence="${esc(id)}">Conferindo status…</span>` : ''}</span></label>`).join('');
+    renderPresence();
     $('selectedOfficers').innerHTML = [...selected].map(([id, person]) => `<li><span>${esc(person.nome)}</span><button type="button" data-remove-officer="${esc(id)}" aria-label="Remover ${esc(person.nome)}" ${busy || officersLoading ? 'disabled' : ''}>×</button></li>`).join('');
     $('refreshOfficers').disabled = busy || officersLoading;
     $('clearParticipants').disabled = busy || officersLoading || !selected.size;
     updateDraft();
+  }
+  function renderPresence() {
+    const known = presenceValidUntil > Date.now() && navigator.onLine !== false;
+    for (const badge of $('officerList').querySelectorAll('[data-presence]')) {
+      const online = known && (presence.get(badge.dataset.presence) || 0) > Date.now();
+      const text = known ? online ? 'Online no painel' : 'Offline' : 'Status indisponível';
+      if (badge.textContent !== text) badge.textContent = text;
+      badge.className = 'presence-badge ' + (known ? online ? 'is-online' : 'is-offline' : 'is-unknown');
+    }
+    $('presenceState').textContent = known ? 'Presença atualizada automaticamente. Online = atividade recente no painel.' : presenceLoading ? 'Conferindo presença no painel…' : 'Presença indisponível. Você pode continuar selecionando os oficiais; tentaremos novamente.';
+  }
+  async function loadPresence() {
+    if (!editor.open || presenceLoading || document.visibilityState === 'hidden') return;
+    const generation = presenceGeneration;
+    presenceLoading = true; nextPresenceLoad = Date.now() + 30000; renderPresence();
+    const controller = presenceController = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const started = Date.now();
+    try {
+      await window.CavalariaPresence?.touch();
+      const result = await api('presenca', 'GET', undefined, { signal: controller.signal });
+      if (generation !== presenceGeneration) return;
+      const serverTime = Date.parse(result.servidor_em);
+      if (!Array.isArray(result.online) || !Number.isFinite(serverTime) || result.online.some(item => typeof item.id !== 'string' || !Number.isFinite(Date.parse(item.expira_em)))) throw new Error('Presença inválida.');
+      // Converter durações do servidor, sem depender de relógios sincronizados.
+      presence = new Map(result.online.map(item => [item.id, started + Math.max(0, Math.min(120000, Date.parse(item.expira_em) - serverTime))]));
+      presenceValidUntil = started + 45000;
+    } catch { if (generation === presenceGeneration) presenceValidUntil = 0; }
+    finally {
+      clearTimeout(timeout);
+      if (generation === presenceGeneration) { presenceLoading = false; presenceController = null; renderPresence(); }
+    }
+  }
+  function startPresence() {
+    presenceGeneration++; presenceValidUntil = 0; presenceLoading = false;
+    loadPresence();
+    clearInterval(presenceTimer);
+    presenceTimer = setInterval(() => {
+      if (!editor.open || document.visibilityState === 'hidden') return;
+      renderPresence();
+      if (Date.now() >= nextPresenceLoad) loadPresence();
+    }, 5000);
+  }
+  function stopPresence() {
+    presenceGeneration++; clearInterval(presenceTimer); presenceTimer = null;
+    presenceController?.abort(); presenceController = null; presenceLoading = false; presenceValidUntil = 0;
   }
   async function loadOfficers() {
     if (busy || officersLoading) return;
@@ -132,6 +180,7 @@
   }
   function closeEditor(force = false) {
     if (!force && (busy || (draft() !== initialDraft && !confirm('Descartar este registro? As alterações ainda não foram salvas.')))) return;
+    stopPresence();
     officerRequest++; officersLoading = false; editor.close(); editingId = null; form.reset(); selected.clear(); historical.clear(); editorError(); $('newAction').focus();
   }
   function openEditor(item) {
@@ -154,7 +203,7 @@
     $('authorRank').value = lastRank || (item?.autor?.id === access.user.id ? item.autor.patente : '') || '';
     $('registrarName').textContent = `Responsável: ${displayName(access.user)}`;
     $('officerSearch').value = ''; setHidden('selectorError', true);
-    updateDraft(); initialDraft = draft(); editor.showModal(); $('actionTitle').focus(); loadOfficers();
+    updateDraft(); initialDraft = draft(); editor.showModal(); $('actionTitle').focus(); loadOfficers(); startPresence();
   }
   $('newAction').onclick = () => openEditor();
   $('closeAction').onclick = () => closeEditor();
@@ -162,7 +211,12 @@
   editor.addEventListener('cancel', event => { event.preventDefault(); closeEditor(); });
   form.addEventListener('input', updateDraft);
   $('officerSearch').addEventListener('input', renderOfficers);
-  $('refreshOfficers').onclick = loadOfficers;
+  $('refreshOfficers').onclick = () => { loadOfficers(); loadPresence(); };
+  document.addEventListener('visibilitychange', () => { if (editor.open && document.visibilityState !== 'hidden') { renderPresence(); loadPresence(); } });
+  window.addEventListener('online', () => { if (editor.open) loadPresence(); });
+  window.addEventListener('offline', () => { presenceValidUntil = 0; if (editor.open) renderPresence(); });
+  window.addEventListener('pagehide', stopPresence);
+  window.addEventListener('pageshow', event => { if (event.persisted && editor.open) startPresence(); });
   $('clearParticipants').onclick = () => { if (!busy && !officersLoading) { selected.clear(); renderOfficers(); } };
   $('officerList').addEventListener('change', event => {
     const input = event.target.closest('input[data-officer]');

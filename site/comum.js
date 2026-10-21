@@ -194,15 +194,16 @@
     }
 
     db.auth.onAuthStateChange(event => {
-      if (event === 'SIGNED_OUT') goToLogin('saiu');
+      if (event === 'SIGNED_OUT') { window.CavalariaPresence?.stop(); goToLogin('saiu'); }
     });
     access.session = data.session;
     renderShell(access, pageId);
+    window.CavalariaPresence?.start(access, api);
     return access;
   }
 
   // Chamada às Netlify Functions (/api/...), autenticada com o token da sessão atual.
-  async function api(path, method = 'GET', body) {
+  async function api(path, method = 'GET', body, options = {}) {
     const { data } = await db.auth.getSession();
     const response = await fetch('/api/' + path, {
       method,
@@ -211,6 +212,7 @@
         authorization: 'Bearer ' + (data?.session?.access_token || ''),
       },
       body: body ? JSON.stringify(body) : undefined,
+      signal: options.signal,
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.erro || `Falha na comunicação (${response.status})`);
@@ -218,6 +220,7 @@
   }
 
   async function signOut() {
+    window.CavalariaPresence?.stop();
     await db.auth.signOut();
     goToLogin('saiu');
   }

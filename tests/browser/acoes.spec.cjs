@@ -3,6 +3,67 @@ const { readFileSync } = require('node:fs');
 const { prepare } = require('./fixtures.cjs');
 const helpers = require('../../site/acoes-dados.js');
 const today = helpers.dayKey();
+
+test('roster mantém todos os oficiais e atualiza presença sem perder seleção ou foco', async ({ page }) => {
+  await page.clock.install();
+  const settings = { cargo: 'Membro', onlineIds: ['test-official'] };
+  const { calls } = await prepare(page, settings);
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  const morgan = page.locator('.officer-option').filter({ has: page.getByRole('checkbox', { name: 'Morgan West', exact: true }) });
+  const john = page.locator('.officer-option').filter({ has: page.getByRole('checkbox', { name: 'John Carter', exact: true }) });
+  await expect(morgan).toContainText('Online no painel');
+  await expect(john).toContainText('Offline');
+  await page.getByRole('checkbox', { name: 'John Carter', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'John Carter', exact: true }).focus();
+  settings.onlineIds = ['john-official'];
+  await page.clock.fastForward(31000);
+  await expect(john).toContainText('Online no painel');
+  await expect(morgan).toContainText('Offline');
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeFocused();
+  await expect(page.locator('#actionCavalry')).toHaveValue('1');
+  settings.presenceFail = true;
+  await page.clock.fastForward(31000);
+  await expect(john).toContainText('Status indisponível');
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeChecked();
+  await expect(page.locator('#saveAction')).toBeEnabled();
+  settings.presenceFail = false;
+  await page.getByRole('button', { name: 'Atualizar lista', exact: true }).click();
+  await expect(john).toContainText('Online no painel');
+  await expect(page.getByRole('checkbox')).toHaveCount(3);
+  expect(calls.filter(call => call.path === '/api/presenca').every(call => call.authenticated)).toBe(true);
+});
+
+test('presença expira localmente e atualizações não deixam rascunho sujo', async ({ page }) => {
+  await page.clock.install();
+  await prepare(page, { cargo: 'Membro', presenceTTL: 8000 });
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  const badge = page.locator('[data-presence="test-official"]');
+  await expect(badge).toHaveText('Online no painel');
+  await page.clock.fastForward(11000);
+  await expect(badge).toHaveText('Offline');
+  let dialogs = 0;
+  page.on('dialog', async dialog => { dialogs++; await dialog.dismiss(); });
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.locator('#actionEditor')).not.toBeVisible();
+  expect(dialogs).toBe(0);
+});
+
+test('desktop e celular exibem status por texto, inclusive com serviço indisponível', async ({ page }) => {
+  await prepare(page, { cargo: 'Membro' });
+  await page.goto('/acoes.html');
+  await page.getByRole('button', { name: 'Registrar ação', exact: true }).click();
+  await expect(page.locator('[data-presence="test-official"]')).toHaveText('Online no painel');
+  await page.locator('#officerList').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/acoes-presenca-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#officerList').scrollIntoViewIfNeeded();
+  await expect(page.getByRole('checkbox', { name: 'John Carter', exact: true })).toBeEnabled();
+  expect(await page.locator('#actionEditor').evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await page.screenshot({ path: 'test-results/acoes-presenca-mobile.png' });
+});
 const sample = (id, extra = {}) => ({ id, titulo: 'Defesa de Valentine', ocorrido_em: today + 'T12:00:00.000Z', resultado: 'vitoria', cavalaria: 2, oponentes: 3, participantes: ['Morgan West', 'John Carter'], relato: 'Retomada da estação.', autor: { id: 'test-official', nome: 'Morgan West', cargo: 'Membro', patente: 'Soldado' }, criado_em: today + 'T14:00:00.000Z', atualizado_em: null, arquivado_em: null, ...extra });
 async function fill(page, values = {}) {
   await page.locator('#actionTitle').fill(values.titulo || 'Defesa de Valentine');

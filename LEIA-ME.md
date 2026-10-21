@@ -190,6 +190,12 @@ select id, 'admin' from auth.users where email = 'EMAIL_DA_CONTA';
 
 3. Preencha `site/config.js` com a URL e a chave **publishable** do projeto e configure o Netlify como acima. Daí em diante, tudo pela página Contas.
 
+## Presença dos oficiais
+
+O seletor de participantes de Ações lista todos os oficiais autorizados e mostra Online no painel ou Offline. O indicador considera atividade em uma página interna visível nos últimos dois minutos; não representa o status dentro do jogo. Falhas de consulta mostram Status indisponível e não impedem selecionar os participantes. Busca, seleção e quantidade do confronto continuam independentes do status.
+
+O painel confirma presença automaticamente após validar a sessão. Fechar o site, deixar todas as abas ocultas ou sair da conta faz a presença expirar em até dois minutos após a última confirmação. Outra aba/dispositivo ativo mantém a mesma conta online. Detalhes técnicos e limites em [docs/ACOES.md](docs/ACOES.md).
+
 ## Teste mínimo
 
 1. Senha errada no login: acesso negado.

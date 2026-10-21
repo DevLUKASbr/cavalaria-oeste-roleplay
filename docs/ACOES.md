@@ -22,6 +22,18 @@ Os registros ficam em `cavalaria/acoes/<id>.json`, no Storage privado existente.
 
 Somente o livro de Ações ativa paginação completa do armazenamento, com lotes de 1.000 nomes e leitura de oito arquivos por vez. Falhas de leitura ou registros ilegíveis interrompem a resposta para evitar um relatório parcial apresentado como completo. Os demais módulos preservam o comportamento anterior. A listagem completa ainda cresce em custo e tempo com o volume; cotas e tempo de execução do Supabase continuam aplicáveis.
 
+## Presença no painel
+
+Todos os oficiais continuam disponíveis para seleção, com indicadores textuais Online no painel, Offline ou Status indisponível. Online significa presença confirmada nos últimos dois minutos em uma página interna visível, com sessão autorizada. Não mede a conexão dentro do jogo, nem usa o último login como presença. Abas ocultas não renovam a atividade; voltar ao painel retoma a confirmação.
+
+`POST /api/presenca` renova um único objeto privado `cavalaria/presenca/<user_id>.json` por conta. ID e horário do cliente são ignorados: a conta vem da sessão validada e o horário vem de `updated_at` do Storage. As abas e dispositivos da mesma conta renovam o mesmo objeto. Fechar uma aba ou sair não apaga a presença das demais; a saída expira em dois minutos após a última confirmação. Não há arquivos por aba nem histórico de atividades acumulado.
+
+`GET /api/presenca` exige acesso a Ações e retorna `{ online: [{ id, expira_em }], servidor_em }`, sem e-mails, tokens ou horários de último login. Pagina os metadados em lotes de 1.000 sem baixar cada objeto. Erros e timestamps inválidos geram 502, nunca uma lista falsa de offline. Não altera as permissões de Contas nem as políticas RLS.
+
+`presenca.js` inicia somente após `requirePage` autorizar a conta, usa o token atual a cada chamada e confirma a presença a cada 45 segundos enquanto a página estiver visível e com rede. Para no logout e ao sair da página. A consulta do seletor ocorre a cada 30 segundos apenas com o editor aberto e visível; o status expira localmente e fica indisponível se a leitura falhar ou não for renovada em 45 segundos. Os relógios do navegador e servidor não precisam estar sincronizados. Há timeout de 12 segundos e recuperação automática. Atualizações de status só alteram os textos dos indicadores, preservando seleção, foco e rascunho. A criação/edição de ações independe da consulta de presença.
+
+O mecanismo usa o Storage privado já existente, sem SQL, novas credenciais ou serviço adicional. As chamadas periódicas consomem as cotas normais da API e do Storage; não implica ausência de limites dos provedores.
+
 ## Relatórios
 
 Filtros de período são inclusivos e usam a data da ocorrência em `America/Bahia`. Busca considera título, relato, nomes dos participantes e responsável/patente. Resultado pode ser vitória, derrota ou todos. A paginação de dez cartões é apenas visual: indicadores e CSV incluem todos os resultados filtrados. Taxa de vitória = vitórias / ações filtradas; livro vazio mostra taxa indisponível.

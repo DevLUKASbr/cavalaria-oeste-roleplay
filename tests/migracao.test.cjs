@@ -9,7 +9,7 @@ const modules = Promise.all([
 ]);
 const serverEnv = { SUPABASE_URL: 'https://supabase.example.test', SUPABASE_SECRET_KEY: 'fixture-server-only' };
 const proxyEnv = { SUPABASE_FUNCTION_URL: 'https://edge.example.test/functions/v1/cavalaria-api' };
-const routes = ['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes', 'acoes'];
+const routes = ['avisos', 'contas', 'treinamentos', 'recrutamentos', 'investigacoes', 'acoes', 'presenca'];
 const req = (path, { body, token = 'valid-session', method = body ? 'POST' : 'GET' } = {}) => new Request('https://site.example.test' + path, {
   method,
   headers: { ...(token ? { authorization: 'Bearer ' + token } : {}), 'content-type': 'application/json', cookie: 'private-cookie=fixture' },

@@ -1,3 +1,13 @@
+# Presença dos oficiais no painel — 21/10/2026
+
+Seleção de participantes mantém todos os oficiais e exibe Online no painel, Offline ou Status indisponível. Atividade confirmada em uma página interna visível renova a presença a cada 45 segundos. A presença expira dois minutos após a última confirmação, sem usar último login nem medir a conexão no jogo. Consulta automática enquanto o formulário estiver aberto preserva seleção, foco e rascunho; falhas não bloqueiam o registro da ação.
+
+Nova rota autenticada `GET/POST /api/presenca`, com um objeto por conta no Storage privado existente e horário determinado pelo servidor. Abas/dispositivos renovam a mesma chave; fechar uma aba não desconecta as demais. Consulta pagina metadados, sem baixar todos os objetos. Nenhum SQL, conta, credencial ou regra RLS alterada. As chamadas consomem as cotas existentes dos provedores.
+
+Validação: **87 testes de servidor/cliente** e **51 testes Chromium**, com builds Edge e Cloudflare. Guia de operação e limites em [docs/ACOES.md](docs/ACOES.md). Publicar a API antes de integrar o frontend, seguindo o fluxo existente.
+
+---
+
 # Seleção de oficiais em Ações — 21/10/2026
 
 Campos de participantes substituídos por caixas de seleção com busca pelo Nome no RP cadastrado em Contas e permissões. A lista inclui todas as contas autorizadas mesmo desconectadas ou sem login anterior, e a quantidade da Cavalaria acompanha a seleção automaticamente. Busca e falhas de recarga preservam o rascunho e os oficiais marcados.

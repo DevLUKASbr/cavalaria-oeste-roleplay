@@ -32,7 +32,7 @@ for (const cargo of ['Xerife', 'Sub-Xerife', 'Adm']) {
     await expect(page.locator('#noticeList')).toContainText('Nenhum aviso arquivado');
     await page.locator('#noticeStatus').selectOption('ativos');
     await expect(page.locator('#noticeList')).toContainText('Ordem revisada');
-    expect(calls.filter(call => call.payload).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'arquivar', 'restaurar']);
+    expect(calls.filter(call => call.payload?.acao).map(call => call.payload.acao)).toEqual(['criar', 'editar', 'arquivar', 'restaurar']);
     expect(calls.every(call => call.authenticated)).toBe(true);
     await page.goto('/dashboard.html');
     await expect(page.locator('#dashboardNotices')).toContainText('Ordem revisada');
@@ -51,7 +51,7 @@ for (const settings of [{ cargo: 'Membro' }, { cargo: '', role: 'xerife' }]) {
     await expect(page.locator('#archiveField')).toBeHidden();
     await expect(page.locator('#noticeList button')).toHaveCount(0);
     expect(await page.evaluate(() => window.__xss)).toBeUndefined();
-    expect(calls.some(call => call.payload)).toBe(false);
+    expect(calls.some(call => call.path === '/api/avisos' && call.payload)).toBe(false);
   });
 }
 test('falha de leitura permite tentar novamente e não apresenta vazio falso', async ({ page }) => {
@@ -132,7 +132,7 @@ test('prévia segura, contadores e confirmação protegem o texto do editor', as
   await page.locator('#cancelNotice').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#newNotice')).toBeFocused();
-  expect(calls.some(call => call.payload)).toBe(false);
+  expect(calls.some(call => call.path === '/api/avisos' && call.payload)).toBe(false);
 });
 
 test('publicar limpa os filtros para mostrar o novo aviso e persiste ao recarregar', async ({ page }) => {
