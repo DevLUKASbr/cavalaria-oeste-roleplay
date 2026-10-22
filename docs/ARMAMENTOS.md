@@ -27,8 +27,8 @@ Selecionar uma patente é apenas uma consulta ao regulamento. O cargo da conta (
 
 - `site/armamentos-dados.js`: fonte única com 15 armas, cinco categorias e seis patentes. `allowed` e `filter` são usados na lista, na ficha e na tabela comparativa. Para mudar a regra, editar os IDs explicitamente em `ranks` com autorização do Comando e atualizar o teste da matriz.
 - `site/armamentos.js`: seleção de patente, busca sem depender de acentos, busca por aliases (Henry/Litchfield, Winchester/Lancaster, Ferrolho/Bolt Action), filtros combinados, exibição opcional de todo o arsenal e ficha em diálogo nativo com retorno de foco. Nenhuma preferência de consulta é enviada à conta ou ao banco.
-- `site/armamentos.css`: identidade verde escuro, dourado e papel, insígnias vetoriais, fotos do compêndio, cartões e tabela com rolagem própria em telas pequenas. Indicadores de permissão usam texto, além de cores. Layout responsivo e suporte a movimento reduzido.
-- Imagens em `site/assets/armamentos/`, servidas localmente (cerca de 1,21 MiB no conjunto). Créditos, origens exatas e critérios de identificação em [ARMAMENTOS-IMAGENS.md](ARMAMENTOS-IMAGENS.md). Não remover marcas, molduras ou créditos das fotos.
+- `site/armamentos.css`: identidade verde escuro, dourado e papel, insígnias vetoriais, imagens dos modelos do jogo, cartões e tabela com rolagem própria em telas pequenas. Indicadores de permissão usam texto, além de cores. Layout responsivo e suporte a movimento reduzido.
+- Imagens em `site/assets/armamentos/`, servidas localmente. Por solicitação do proprietário em 22/10/2026, as 15 referências visuais usam a Red Dead Wiki / Fandom como fonte. Créditos, origens exatas e critérios de identificação em [ARMAMENTOS-IMAGENS.md](ARMAMENTOS-IMAGENS.md). Não remover marcas, molduras ou créditos das imagens.
 
 Características são descritivas do modelo de jogo. Não foram inventados valores de dano, precisão, preço ou balanceamento do servidor. Os nomes da tabela são mantidos, com grafia Volcanic e aliases explicados nas fichas. Fotos não são prova de autorização: a matriz por patente determina a indicação da interface.
 
