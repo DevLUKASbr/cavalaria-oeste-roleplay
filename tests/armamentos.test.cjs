@@ -41,8 +41,8 @@ test('as quinze armas possuem fotos locais distintas válidas e créditos de ori
     total += statSync(file).size;
     assert.ok(weapon.traits.length >= 3 && weapon.description.length > 60);
     assert.ok(book.categories.some(item => item.id === weapon.category));
-    assert.match(weapon.sourceUrl, /^https:\/\/(www\.gtabase\.com|www\.3dmgame\.com)\//);
-    assert.ok(weapon.imageCredit);
+    assert.match(weapon.sourceUrl, /^https:\/\/reddead\.fandom\.com\/wiki\/[^/]+$/);
+    assert.equal(weapon.imageCredit, 'Red Dead Wiki / Fandom');
   }
   assert.equal(hashes.size, 15);
   assert.ok(total < 5 * 1024 * 1024);

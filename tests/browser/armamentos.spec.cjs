@@ -33,6 +33,8 @@ test('filtros e ficha distinguem armas não permitidas e preservam foco ao fecha
   await page.getByRole('button', { name: 'Ver ficha de Mauser', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.locator('#weaponDialogTitle')).toHaveText('Mauser');
+  await expect(page.locator('.weapon-source')).toContainText('Rockstar Games / Red Dead Wiki / Fandom');
+  await expect(page.getByRole('link', { name: 'Consultar referência da arma', exact: false })).toHaveAttribute('href', 'https://reddead.fandom.com/wiki/Mauser_Pistol_(RDR_2)');
   await expect(page.locator('.weapon-rank-list li').filter({ hasText: 'Sub-Xerife' })).toContainText('Não permitido');
   await expect(page.locator('.weapon-rank-list li').filter({ hasText: 'Oficial Sênior' })).toContainText('Permitido');
   await expect(page.getByRole('button', { name: 'Fechar ficha do armamento' })).toBeFocused();
