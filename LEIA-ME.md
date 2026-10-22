@@ -14,6 +14,8 @@ O painel está publicado em **https://cavalaria-oeste-roleplay.pages.dev/** desd
 
 O guia de publicação e manutenção está em [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). A automação de atualizações da API é separada: requer o secret `SUPABASE_ACCESS_TOKEN` no GitHub. Enquanto ele não estiver configurado, alterações da API devem ser publicadas pelo editor do Supabase; alterações das páginas continuam automáticas na Cloudflare.
 
+**Onde editar o código da API:** em `supabase/functions/_shared/` — `handlers/` (um arquivo por rota `/api/...`), `lib/` (código comum, como permissões e armazenamento) e `router.mjs` (liga cada rota ao seu arquivo). É a única cópia. Os arquivos em `netlify/` têm só 3 linhas, reaproveitam esse código e não devem ser editados. Mudanças só em `site/` vão ao ar sozinhas; mudanças em `supabase/` precisam ser publicadas (workflow ou editor do Supabase, como acima).
+
 ## Páginas
 
 | Página | Quem acessa | O que faz |
@@ -60,7 +62,7 @@ npm run test:e2e
 npm run preview
 ```
 
-Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais ao Supabase ou às Functions. Não substituem a homologação com contas reais no preview do Netlify.
+Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais ao Supabase ou às Functions. Não substituem a homologação com contas reais na prévia (Preview) da Cloudflare.
 
 ## Cargos
 
@@ -73,7 +75,7 @@ Os testes em navegador usam dados e credenciais fictícios, sem chamadas reais a
 
 O cargo é escolhido em **Contas** e aparece na barra de cima do site.
 
-**Onde as permissões estão definidas:** no mapa `PERMISSOES` de `netlify/lib/acesso.mjs`. É ele que vale de verdade. O `site/comum.js` tem uma cópia só para montar o menu: **mude os dois juntos**. Para mudar o acesso do Membro, basta acrescentar páginas na lista dele, nos dois arquivos.
+**Onde as permissões estão definidas:** no mapa `PERMISSOES` de `supabase/functions/_shared/lib/acesso.mjs`. É ele que vale de verdade. O `site/comum.js` tem uma cópia só para montar o menu: **mude os dois juntos**. Para mudar o acesso do Membro, basta acrescentar páginas na lista dele, nos dois arquivos.
 
 O registro dos oficiais é protegido também pelo banco: só contas com nível na tabela `cavalaria_membros` leem e editam os registros. Xerife, Sub-Xerife e Adm recebem o nível `admin` (inclui reverter exoneração). O Membro não recebe nível, então não consegue ler o registro nem pela API. Se o Membro um dia ganhar acesso ao registro, também é preciso dar um nível a ele em `NIVEL_DO_CARGO` (`acesso.mjs`). Contas antigas sem cargo aparecem como **Adm** (nível `admin`) ou **Acesso limitado** (nível `xerife`, acesso ao registro e leitura de Avisos).
 
@@ -82,14 +84,14 @@ O registro dos oficiais é protegido também pelo banco: só contas com nível n
 - Xerife, Sub-Xerife e Adm usam **Novo tópico**: título (obrigatório), subtítulo (opcional), descrição e até 10 links de vídeo.
 - Links do YouTube viram player na própria página. Outros links (Medal, Drive, Twitch…) viram um botão "Assistir vídeo".
 - Cada tópico mostra quem publicou e quem editou por último. Excluir pede confirmação e não tem volta.
-- Os tópicos ficam no **Supabase Storage**, bucket privado `cavalaria`, pasta `treinamentos/` (um arquivo JSON por tópico; ver `netlify/lib/armazenamento.mjs`). O bucket é criado sozinho na primeira gravação. Só as Functions leem e gravam lá, com a chave secreta.
+- Os tópicos ficam no **Supabase Storage**, bucket privado `cavalaria`, pasta `treinamentos/` (um arquivo JSON por tópico; ver `supabase/functions/_shared/lib/armazenamento.mjs`). O bucket é criado sozinho na primeira gravação. Só as Functions leem e gravam lá, com a chave secreta.
 
 ## Recrutamento
 
 - **Roteiro:** as 7 etapas do recrutamento (anúncio, dados do candidato, conhecimento intrínseco, teste físico, questionário psicológico, os Quatro Pilares e contratação). Os botões **Copiar comando** copiam o `/anuncio` pronto para colar no jogo.
 - **Fichas de recrutamento:** cada ficha é um recrutamento (data, responsável, auxiliares) com um ou mais candidatos. Para cada candidato: dados pessoais, disponibilidade, qualidades e defeitos, as 3 perguntas pessoais, os testes de caça e natação, as 8 perguntas do questionário, nota (0 a 10), resultado (Pendente, Aprovado, Reprovado) e observações.
 - Fichas podem ser editadas e excluídas por Xerife, Sub-Xerife e Adm. Ficam no Supabase Storage, pasta `recrutamentos/`, como os treinamentos.
-- **Mudar o roteiro:** o texto e as perguntas ficam no início de `site/recrutamento.js`. As respostas são guardadas pela ordem das perguntas. Para mudar a **quantidade** de perguntas, ajuste também `PERSONAL_QUESTIONS` / `PSYCH_QUESTIONS` em `netlify/functions/recrutamentos.mjs`.
+- **Mudar o roteiro:** o texto e as perguntas ficam no início de `site/recrutamento.js`. As respostas são guardadas pela ordem das perguntas. Para mudar a **quantidade** de perguntas, ajuste também `PERSONAL_QUESTIONS` / `PSYCH_QUESTIONS` em `supabase/functions/_shared/handlers/recrutamentos.mjs`.
 
 ## Investigações
 
@@ -128,7 +130,9 @@ A página tem quatro abas:
 - **Fotos:** links do Discord costumam expirar depois de um tempo. Prefira links permanentes (ex.: Imgur). Foto quebrada vira o ícone 👤.
 - **Onde ficam os dados:** no Supabase Storage, pastas `investigacoes-alvos/` (pessoas e lugares), `investigacoes-grupos/` e `investigacoes-vinculos/`, pela Function `/api/investigacoes`.
 
-## Hospedagem anterior: configurar o Netlify
+## Hospedagem anterior: Netlify (legado)
+
+**Não é mais a produção.** Desde 20/10/2026 o site oficial é o da Cloudflare (acima). Esta seção fica só como referência, enquanto os adaptadores em `netlify/` existirem.
 
 O `netlify.toml` já diz ao Netlify o que publicar (`site/`) e onde estão as Functions. Falta só:
 
@@ -188,7 +192,7 @@ insert into public.cavalaria_membros(user_id, role)
 select id, 'admin' from auth.users where email = 'EMAIL_DA_CONTA';
 ```
 
-3. Preencha `site/config.js` com a URL e a chave **publishable** do projeto e configure o Netlify como acima. Daí em diante, tudo pela página Contas.
+3. Preencha `site/config.js` com a URL e a chave **publishable** do projeto e publique o site e a API seguindo [docs/MIGRACAO_CLOUDFLARE.md](docs/MIGRACAO_CLOUDFLARE.md). Daí em diante, tudo pela página Contas.
 
 ## Manual de Armamentos
 
