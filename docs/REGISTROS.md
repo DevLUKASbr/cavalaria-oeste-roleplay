@@ -6,6 +6,16 @@ O botão **Editar oficial** permite corrigir o nome no RP e o contingente atual.
 
 Os contadores do Registro consideram o efetivo sem os exonerados; o arquivo tem seu próprio contador. Busca, CSV e impressão seguem a aba e os filtros em consulta. O CSV identifica a situação efetiva e neutraliza valores interpretáveis como fórmulas. Os indicadores históricos do Dashboard mantêm sua definição própria.
 
+## Cadastro de novos oficiais
+
+O botão **Adicionar oficial** está no topo e no cabeçalho de cada contingente, inclusive nos vazios. O botão da jurisdição já seleciona esse contingente. O formulário recebe nome no RP, contingente, situação inicial (Ativo, Pendente ou Inativo) e observação opcional de até 400 caracteres. Depois de salvar, a consulta volta ao efetivo sem filtros e destaca o novo registro. O cadastro fica no histórico e não cria uma conta de login.
+
+A migração adicional `supabase/migrations/20261026150000_registros_cadastro.sql` cria a RPC `criar_oficial`, restrita aos mesmos editores autorizados, sem conceder INSERT direto na tabela. ID da solicitação é estável durante as tentativas; repetir a confirmação após perda de resposta não insere outra linha. Um bloqueio transacional serializa os cadastros e reserva a próxima ordem sem renumerar registros existentes. O banco valida os campos e rejeita nome já presente no efetivo, desconsiderando caixa e espaços repetidos. Registros exonerados permanecem preservados e não impedem uma readmissão com novo cadastro.
+
+O novo cadastro e a auditoria são gravados na mesma transação. `tests/registros-cadastro-db.sql` valida criação, repetição, duplicados, readmissão e autorização com registros fictícios e ROLLBACK ao final. A migração é independente da RPC de correção e não requer atualização da API Edge.
+
+Migração de cadastro aplicada e QA transacional aprovado em 26/10/2026. Validação do projeto: 90 testes de servidor/cliente e 64 testes Chromium aprovados. Nenhum oficial real foi cadastrado durante a conferência.
+
 ## Banco e autorização
 
 Aplicar somente `supabase/migrations/20261026_registros_edicao.sql` em projetos existentes; não reaplicar os cadastros iniciais de `supabase_instalacao.sql`. Este último foi atualizado apenas para projetos novos.

@@ -31,6 +31,7 @@
       <h2 id="registryViewTitle" class="registry-view-title">Efetivo atual</h2>
 
       <div class="toolbar no-print">
+        <button class="btn" id="newOfficer" type="button">＋ Adicionar oficial</button>
         <input id="search" type="search" placeholder="Buscar oficial pelo nome…" aria-label="Buscar oficial">
         <select id="filter" aria-label="Filtrar situação">
           <option value="all">Todas as situações</option>
@@ -62,7 +63,7 @@
 <dialog id="officerEditor" class="registry-editor" aria-labelledby="officerEditorTitle">
   <form id="officerForm">
     <header><div><span>REGISTRO GERAL DA CAVALARIA</span><h2 id="officerEditorTitle">Editar oficial</h2></div><button id="closeOfficerEditor" type="button" aria-label="Fechar edição do oficial">✕</button></header>
-    <div class="registry-editor-body"><p id="officerEditorContext"></p><label>Nome do oficial no RP<input id="officerName" required minlength="2" maxlength="120" autocomplete="off"></label><label>Contingente atual<select id="officerJurisdiction" required></select></label><p class="hint">Ao trocar o contingente, o oficial passa para a tabela correspondente e o destino proposto volta a “A definir”. O nome anterior e a transferência ficam no histórico. Esta correção atualiza o Registro Geral; o nome da conta de acesso é gerenciado em Contas e permissões.</p><p id="officerEditorError" class="system-msg error hide" role="alert"></p></div>
+    <div class="registry-editor-body"><p id="officerEditorContext"></p><label>Nome do oficial no RP<input id="officerName" required minlength="2" maxlength="120" autocomplete="off"></label><label>Contingente atual<select id="officerJurisdiction" required></select></label><div id="officerCreateFields" hidden><label>Situação inicial<select id="officerInitialStatus"><option value="Ativo">Ativo</option><option value="Pendente">Pendente de análise</option><option value="Inativo">Inativo</option></select></label><label>Observação inicial (opcional)<textarea id="officerInitialNotes" rows="3" maxlength="400" placeholder="Informações sobre o ingresso…"></textarea></label></div><p id="officerEditorHelp" class="hint">Ao trocar o contingente, o oficial passa para a tabela correspondente e o destino proposto volta a “A definir”. O nome anterior e a transferência ficam no histórico. Esta correção atualiza o Registro Geral; o nome da conta de acesso é gerenciado em Contas e permissões.</p><p id="officerEditorError" class="system-msg error hide" role="alert"></p></div>
     <footer><button id="cancelOfficerEdit" class="btn secondary" type="button">Cancelar</button><button id="saveOfficerEdit" class="btn" type="submit">Salvar alterações</button></footer>
   </form>
 </dialog>

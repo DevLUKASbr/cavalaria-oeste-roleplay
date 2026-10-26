@@ -27,6 +27,8 @@
     editing: null,
     saving: false,
     refreshPending: false,
+    creating: null,
+    editorOrigin: null,
   };
 
   // Reverter exoneração exige o nível 'admin' no banco (regra da função reverter_exoneracao).
@@ -108,7 +110,7 @@
   function renderSection(jurisdiction) {
     const all = viewOfficers().filter(o => o.origem === jurisdiction);
     const shown = shownOfficers().filter(o => o.origem === jurisdiction);
-    if (!shown.length) return '';
+    if (!shown.length && (state.view === 'exoneracoes' || $('search').value.trim() || $('filter').value !== 'all')) return '';
     const subtitle = jurisdiction === 'Sem jurisdição'
       ? 'Efetivo sem atribuição territorial'
       : state.view === 'exoneracoes' ? 'Exonerações concluídas neste contingente' : 'Contingente atual do oficial';
@@ -122,7 +124,7 @@
     return `<section class="section">
       <div class="sectionhead">
         <div><h2>✦ ${esc(jurisdiction)}</h2><small>${subtitle}</small></div>
-        <div class="counter">${shown.length} de ${all.length} oficiais</div>
+        <div class="registry-section-actions"><div class="counter">${shown.length} de ${all.length} oficiais</div>${state.view === 'efetivo' ? `<button type="button" class="registry-add no-print" data-add="${esc(jurisdiction)}" aria-label="Adicionar oficial em ${esc(jurisdiction)}">＋ Adicionar oficial</button>` : ''}</div>
       </div>
       <div class="tablewrap"><table>
         <thead><tr><th>Nº</th><th>Nome do oficial</th><th>Situação</th><th>Destino proposto</th><th>Observações</th><th>Registro de ação</th></tr></thead>
@@ -143,6 +145,7 @@
       ? 'Oficiais já exonerados no jogo. Estes registros ficam fora do efetivo. O Alto Comando pode reverter uma exoneração com justificativa.'
       : 'Oficiais vinculados à Cavalaria. Exonerações propostas continuam aqui até a confirmação da execução no jogo. Nome e contingente podem ser corrigidos em Editar oficial.';
     $('filter').hidden = archived;
+    $('newOfficer').hidden = archived;
     $('sections').innerHTML = JURISDICTIONS.map(renderSection).join('')
       || `<p class="registry-empty">${archived ? 'Nenhuma exoneração encontrada nesta consulta.' : 'Nenhum oficial encontrado nesta consulta.'}</p>`;
   }
@@ -151,7 +154,7 @@
     $('history').innerHTML = `<strong>Últimas ${HISTORY_LIMIT} alterações registradas</strong>` +
       entries.map(entry => `<div class="history-entry">
         <b>${esc(entry.oficial_nome)}</b> · ${formatDateTime(entry.alterado_em)} · ${esc(personName(entry.autor_email))}
-        <div class="small">Antes: ${esc(JSON.stringify(entry.antes))}<br>Depois: ${esc(JSON.stringify(entry.depois))}</div>
+        <div class="small">${entry.antes === null ? 'Cadastro inicial' : 'Antes: '+esc(JSON.stringify(entry.antes))}<br>Depois: ${esc(JSON.stringify(entry.depois))}</div>
       </div>`).join('');
   }
 
@@ -169,8 +172,13 @@
     }
   }
 
-  async function fetchOfficers() {
-    if (state.loading) return;
+  let officersRequest=null;
+  function fetchOfficers(force=false) {
+    if (officersRequest) return force ? officersRequest.then(()=>fetchOfficers()) : officersRequest;
+    officersRequest=loadOfficers().finally(()=>{officersRequest=null;});
+    return officersRequest;
+  }
+  async function loadOfficers() {
     state.loading = true;
     try {
       const { data, error } = await db.from('cavalaria_oficiais').select('*').order('ordem', { ascending: true });
@@ -203,7 +211,7 @@
   function scheduleRefresh() {
     clearTimeout(state.refreshTimer);
     state.refreshTimer = setTimeout(() => {
-      if (state.editing || state.saving || document.activeElement?.matches('[data-field="observacao"]')) state.refreshPending = true;
+      if (state.editing || state.creating || state.saving || document.activeElement?.matches('[data-field="observacao"]')) state.refreshPending = true;
       else fetchOfficers();
     }, 350);
   }
@@ -239,7 +247,7 @@
       const { data, error } = result;
       if (error || !data) throw new Error(error?.message || 'O registro mudou desde a abertura. Feche a edição, confira os dados atualizados e tente novamente.');
       message('Alteração registrada no banco de dados.', 'success');
-      await fetchOfficers();
+      await fetchOfficers(true);
       return true;
     } catch (error) {
       const text = 'A alteração não foi salva: ' + error.message;
@@ -255,6 +263,12 @@
   function openEditor(officer) {
     if (isExecuted(officer) || state.saving) return;
     state.editing = { ...officer };
+    state.creating = null;
+    state.editorOrigin = { type:'edit', id:officer.id };
+    $('officerEditorTitle').textContent = 'Editar oficial';
+    $('saveOfficerEdit').textContent = 'Salvar alterações';
+    $('officerCreateFields').hidden = true;
+    $('officerEditorHelp').textContent = 'Ao trocar o contingente, o oficial passa para a tabela correspondente e o destino proposto volta a “A definir”. O nome anterior e a transferência ficam no histórico. Esta correção atualiza o Registro Geral; o nome da conta de acesso é gerenciado em Contas e permissões.';
     $('officerName').value = officer.nome;
     $('officerJurisdiction').innerHTML = selectOptions(JURISDICTIONS, officer.origem);
     $('officerEditorContext').textContent = `${officer.nome} · ${officer.origem}`;
@@ -263,16 +277,60 @@
     document.body.classList.add('registry-editor-open');
     $('officerName').focus();
   }
+  function openCreate(jurisdiction = JURISDICTIONS[0], fromSection = false) {
+    if (state.saving) return;
+    state.editing = null;
+    state.creating = { requestId:crypto.randomUUID() };
+    state.editorOrigin = { type:'add', jurisdiction:fromSection ? jurisdiction : null };
+    $('officerEditorTitle').textContent = 'Adicionar oficial';
+    $('saveOfficerEdit').textContent = 'Cadastrar oficial';
+    $('officerEditorContext').textContent = 'Novo integrante do Registro Geral';
+    $('officerName').value = '';
+    $('officerJurisdiction').innerHTML = selectOptions(JURISDICTIONS, jurisdiction);
+    $('officerCreateFields').hidden = false;
+    $('officerInitialStatus').value = 'Ativo';
+    $('officerInitialNotes').value = '';
+    $('officerEditorHelp').textContent = 'O oficial será incluído na tabela do contingente escolhido e o cadastro ficará no histórico. Para criar também um acesso ao painel, use Contas e permissões.';
+    setHidden('officerEditorError',true);
+    $('officerEditor').showModal(); document.body.classList.add('registry-editor-open'); $('officerName').focus();
+  }
+  async function createOfficer(name,jurisdiction) {
+    const initialStatus = $('officerInitialStatus').value;
+    const notes = $('officerInitialNotes').value.trim();
+    if (!['Ativo','Pendente','Inativo'].includes(initialStatus) || notes.length>400) {
+      $('officerEditorError').textContent = 'Confira a situação inicial e a observação (até 400 caracteres).'; setHidden('officerEditorError',false); return;
+    }
+    state.saving=true;
+    const controls=[...$('officerForm').querySelectorAll('input,select,textarea,button')]; controls.forEach(c=>{c.disabled=true;});
+    let createdId;
+    try {
+      const {data,error}=await db.rpc('criar_oficial',{p_requisicao:state.creating.requestId,p_nome:name,p_contingente:jurisdiction,p_situacao:initialStatus,p_observacao:notes});
+      if (error || !data) throw new Error(error?.message || 'O banco não confirmou o cadastro. Tente novamente.');
+      createdId=data;
+    } catch (error) {
+      $('officerEditorError').textContent='O oficial não foi cadastrado: '+error.message; setHidden('officerEditorError',false);
+    } finally { state.saving=false; controls.forEach(c=>{c.disabled=false;}); }
+    if (!createdId) return;
+    state.editorOrigin={type:'edit',id:createdId};
+    state.view='efetivo'; $('search').value=''; $('filter').value='all';
+    // A gravação já foi confirmada. Não mantemos o formulário para evitar novo cadastro caso a leitura falhe.
+    closeEditor();
+    await fetchOfficers(true);
+    [...$('sections').querySelectorAll('tr[data-id]')].find(row=>row.dataset.id===createdId)?.querySelector('[data-edit]')?.focus();
+    if ($('connection').textContent !== 'Erro na conexão') message(`${name}: cadastrado em ${jurisdiction}.`,'success');
+    else message(`${name}: cadastro confirmado. Não foi possível atualizar a lista; recarregue a página para consultá-lo.`,'error');
+  }
   function closeEditor() { if (!state.saving) $('officerEditor').close(); }
   $('officerForm').addEventListener('submit', async event => {
     event.preventDefault();
     const original = state.editing;
-    if (!original || state.saving) return;
+    if ((!original && !state.creating) || state.saving) return;
     const name = $('officerName').value.trim().replace(/\s+/g, ' ');
     const jurisdiction = $('officerJurisdiction').value;
     if (name.length < 2 || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name) || !JURISDICTIONS.includes(jurisdiction)) {
       $('officerEditorError').textContent = 'Informe um nome de 2 a 120 caracteres e um contingente válido.'; setHidden('officerEditorError', false); return;
     }
+    if (state.creating) { await createOfficer(name,jurisdiction); return; }
     const patch = {};
     if (name !== original.nome) patch.nome = name;
     if (jurisdiction !== original.origem) { patch.origem = jurisdiction; patch.destino = 'A definir'; }
@@ -286,9 +344,12 @@
   $('cancelOfficerEdit').onclick = closeEditor;
   $('officerEditor').addEventListener('cancel', event => { if (state.saving) event.preventDefault(); });
   $('officerEditor').addEventListener('close', () => {
-    const id = state.editing?.id;
-    state.editing = null; document.body.classList.remove('registry-editor-open');
-    [...$('sections').querySelectorAll('tr[data-id]')].find(row => row.dataset.id === id)?.querySelector('[data-edit]')?.focus();
+    const origin=state.editorOrigin;
+    state.editing = null; state.creating=null; state.editorOrigin=null; document.body.classList.remove('registry-editor-open');
+    const target=origin?.type==='edit'
+      ? [...$('sections').querySelectorAll('tr[data-id]')].find(row=>row.dataset.id===origin.id)?.querySelector('[data-edit]')
+      : [...$('sections').querySelectorAll('[data-add]')].find(button=>button.dataset.add===origin?.jurisdiction) || $('newOfficer');
+    target?.focus();
     if (state.refreshPending) { state.refreshPending = false; fetchOfficers(); }
   });
 
@@ -382,6 +443,7 @@
     setHidden('history', !state.historyShown);
     if (state.historyShown) await fetchHistory();
   };
+  $('newOfficer').onclick=()=>openCreate();
 
   // Situação e destino salvam ao trocar; observação salva ao sair do campo.
   $('sections').addEventListener('change', async e => {
@@ -398,10 +460,12 @@
     if (officer && e.target.value !== officer.observacao) {
       await updateOfficer(row.dataset.id, { observacao: e.target.value });
     }
-    if (state.refreshPending && !state.editing && !state.saving) { state.refreshPending = false; fetchOfficers(); }
+    if (state.refreshPending && !state.editing && !state.creating && !state.saving) { state.refreshPending = false; fetchOfficers(); }
   });
 
   $('sections').addEventListener('click', async e => {
+    const addButton=e.target.closest('[data-add]');
+    if (addButton) { openCreate(addButton.dataset.add,true); return; }
     const button = e.target.closest('[data-execute], [data-revert], [data-edit]');
     if (!button) return;
     const officer = findOfficer(button.closest('tr[data-id]').dataset.id);

@@ -54,6 +54,19 @@ function supabaseMock() {
     from: builder,
     async rpc(name, payload) {
       state.calls.push({ rpc: name, payload });
+      if (name === 'criar_oficial') {
+        if (settings.createDelay) await new Promise(resolve=>setTimeout(resolve,settings.createDelay));
+        if (state.saveFail) return {data:null,error:{message:'Falha fictícia ao salvar'}};
+        const prior=state.officers.find(o=>o.id===payload.p_requisicao);
+        if (prior) return {data:prior.id,error:null};
+        const nome=payload.p_nome.trim().replace(/\s+/g,' ');
+        if (state.officers.some(o=>!o.executed_at&&o.nome.trim().toLowerCase()===nome.toLowerCase())) return {data:null,error:{message:'Já existe um oficial com esse nome no efetivo'}};
+        const added={id:payload.p_requisicao,ordem:Math.max(0,...state.officers.map(o=>o.ordem))+1,nome,origem:payload.p_contingente,status:payload.p_situacao,destino:'A definir',observacao:payload.p_observacao,executed_at:null};
+        state.officers.push(added);
+        state.audit.unshift({oficial_nome:nome,alterado_em:new Date().toISOString(),autor_email:user.email,antes:null,depois:{operacao:'cadastro',nome,contingente:added.origem}});
+        if (state.createResponseLost) {state.createResponseLost=false; return {data:null,error:{message:'Resposta indisponível; tente novamente'}};}
+        return {data:added.id,error:null};
+      }
       const officer = state.officers.find(row => row.id === payload.p_oficial);
       if (name === 'corrigir_oficial') {
         if (state.saveFail) return { data:null,error:{message:'Falha fictícia ao salvar'} };
