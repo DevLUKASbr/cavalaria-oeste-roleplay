@@ -7,6 +7,7 @@
   <link rel="icon" href="logo-oeste.png">
   <link rel="stylesheet" href="estilo.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="registros.css">
 </head>
 <body class="admin-page">
 <div id="shell"></div>
@@ -26,6 +27,8 @@
 
     <div id="private" class="hide">
       <div class="stats" id="stats"></div>
+      <div class="registry-views no-print" role="group" aria-label="Visão dos registros"><button id="viewOfficers" type="button" aria-pressed="true" aria-controls="sections">Efetivo <span id="officersCount">0</span></button><button id="viewDismissed" type="button" aria-pressed="false" aria-controls="sections">Exonerações <span id="dismissedCount">0</span></button></div>
+      <h2 id="registryViewTitle" class="registry-view-title">Efetivo atual</h2>
 
       <div class="toolbar no-print">
         <input id="search" type="search" placeholder="Buscar oficial pelo nome…" aria-label="Buscar oficial">
@@ -35,17 +38,16 @@
           <option value="Ativo">Ativo</option>
           <option value="Inativo">Inativo</option>
           <option value="Exonerar">Exoneração proposta</option>
-          <option value="Exonerado">Exoneração executada</option>
         </select>
-        <button class="btn" id="csv">Exportar revisão (.CSV)</button>
+        <button class="btn" id="csv">Exportar esta aba (.CSV)</button>
         <button class="btn secondary" id="print">Imprimir / PDF</button>
         <button class="btn secondary" id="historyToggle">Histórico de alterações</button>
       </div>
 
       <div id="history" class="history hide"></div>
 
-      <p class="hint no-print">As mudanças são enviadas ao banco de dados e disponibilizadas aos demais autorizados. <b>Exoneração proposta</b> significa que a medida ainda depende de execução dentro do RP. Após executá-la no jogo, use <b>Confirmar exoneração</b>; o registro passa a exibir o carimbo vermelho <b>EXONERADO</b> e continua preservado.</p>
-      <div class="warning">⚑ <b>Norma do Comando:</b> nenhuma exoneração é automática. Confirme apenas depois que ela for executada no servidor. Um registro carimbado é preservado no histórico e fica bloqueado para edição. As jurisdições originais permanecem indicadas para conferência.</div>
+      <p id="registryViewHelp" class="hint no-print" role="status" aria-live="polite"></p>
+      <div class="warning">⚑ <b>Norma do Comando:</b> confirme uma exoneração somente depois de executá-la no jogo. O oficial sairá do efetivo e ficará na aba <b>Exonerações</b>, com o histórico preservado. Use <b>Editar oficial</b> para corrigir o nome ou mudar o contingente atual; o destino proposto não efetiva uma transferência.</div>
 
       <div id="sections"></div>
     </div>
@@ -57,6 +59,13 @@
     </footer>
   </article>
 </main>
+<dialog id="officerEditor" class="registry-editor" aria-labelledby="officerEditorTitle">
+  <form id="officerForm">
+    <header><div><span>REGISTRO GERAL DA CAVALARIA</span><h2 id="officerEditorTitle">Editar oficial</h2></div><button id="closeOfficerEditor" type="button" aria-label="Fechar edição do oficial">✕</button></header>
+    <div class="registry-editor-body"><p id="officerEditorContext"></p><label>Nome do oficial no RP<input id="officerName" required minlength="2" maxlength="120" autocomplete="off"></label><label>Contingente atual<select id="officerJurisdiction" required></select></label><p class="hint">Ao trocar o contingente, o oficial passa para a tabela correspondente e o destino proposto volta a “A definir”. O nome anterior e a transferência ficam no histórico. Esta correção atualiza o Registro Geral; o nome da conta de acesso é gerenciado em Contas e permissões.</p><p id="officerEditorError" class="system-msg error hide" role="alert"></p></div>
+    <footer><button id="cancelOfficerEdit" class="btn secondary" type="button">Cancelar</button><button id="saveOfficerEdit" class="btn" type="submit">Salvar alterações</button></footer>
+  </form>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>

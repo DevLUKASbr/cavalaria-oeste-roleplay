@@ -34,6 +34,10 @@ O menu de cada pessoa mostra só as páginas que o cargo dela permite. Quem abre
 
 Após o login, a entrada é o **Dashboard**. A navegação usa as rotas HTML existentes, com sidebar e topbar compartilhadas; a sessão individual continua persistida pelo Supabase. O Dashboard de quem não pode ver Registros não consulta efetivo nem auditoria. Premiações permanece como indicação de etapa futura. Os avisos publicados aparecem no Início, no sino e na aba Avisos.
 
+## Organização dos Registros
+
+Para organização do Registro Geral, consulte [docs/REGISTROS.md](docs/REGISTROS.md): efetivo separado das exonerações concluídas, correção de nome e transferência efetiva por contingente, com auditoria. Projetos existentes usam a migração incremental indicada no guia; não reaplicar os cadastros iniciais.
+
 ## Ações
 
 Todos os oficiais autorizados, incluindo Membro e Acesso limitado legado, podem registrar e consultar ações. O formulário pede ação, data e hora, quantidade de oponentes, vitória ou derrota, seleção dos participantes e patente de quem registra. Os oficiais são marcados em caixas de seleção, com busca pelo Nome no RP cadastrado em Contas e permissões; a lista inclui todas as contas autorizadas, independentemente de estarem conectadas ou terem feito login. A quantidade da Cavalaria é preenchida automaticamente pela seleção. O relato é opcional. O responsável e o horário de registro vêm do servidor; a patente é declarada pelo oficial, pois não existe cadastro de patentes neste painel.

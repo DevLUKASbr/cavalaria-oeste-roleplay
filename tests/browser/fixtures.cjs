@@ -14,12 +14,12 @@ function supabaseMock() {
     audit: settings.empty ? [] : [{ oficial_nome: 'Arthur Teste', alterado_em: '2026-10-16T14:00:00Z', autor_email: 'comando@example.test', antes: { situacao: 'Pendente' }, depois: { situacao: 'Ativo' } }],
   };
   function builder(table) {
-    let patch = null, id = null, resultFields = null;
+    let patch = null, id = null, resultFields = null, conditions = [];
     const query = {
       select(fields) { resultFields = fields; return query; },
       order() { return query; },
       limit() { return query; },
-      eq(field, value) { if (field === 'id') id = value; return query; },
+      eq(field, value) { if (field === 'id') id = value; else conditions.push([field, value]); return query; },
       is() { return query; },
       update(value) { patch = value; return query; },
       maybeSingle() { return execute(true); },
@@ -31,8 +31,10 @@ function supabaseMock() {
       if (table === 'cavalaria_membros') return { data: settings.cargo === 'Membro' || settings.noRole ? null : { role: settings.role || 'admin' }, error: null };
       if (state.fail || (table === 'cavalaria_auditoria' && settings.auditFail)) return { data: null, error: { message: 'Fixture indisponível' } };
       if (patch) {
+        if (state.saveFail) return { data: null, error: { message: 'Falha fictícia ao salvar' } };
         const officer = state.officers.find(row => row.id === id && !row.executed_at);
-        if (!officer) return { data: null, error: { message: 'Bloqueado' } };
+        if (!officer || !conditions.every(([field,value]) => officer[field] === value)) return { data: null, error: null };
+        state.audit.unshift({ oficial_nome: patch.nome || officer.nome, alterado_em: new Date().toISOString(), autor_email: 'comando@example.test', antes: { nome: officer.nome, contingente: officer.origem }, depois: { nome: patch.nome || officer.nome, contingente: patch.origem || officer.origem } });
         Object.assign(officer, patch);
         return { data: { id }, error: null };
       }
@@ -53,6 +55,13 @@ function supabaseMock() {
     async rpc(name, payload) {
       state.calls.push({ rpc: name, payload });
       const officer = state.officers.find(row => row.id === payload.p_oficial);
+      if (name === 'corrigir_oficial') {
+        if (state.saveFail) return { data:null,error:{message:'Falha fictícia ao salvar'} };
+        if (!officer || officer.executed_at || officer.nome !== payload.p_nome_anterior || officer.origem !== payload.p_contingente_anterior) return {data:null,error:{message:'O registro mudou desde a abertura'}};
+        state.audit.unshift({oficial_nome:payload.p_nome,alterado_em:new Date().toISOString(),autor_email:'comando@example.test',antes:{nome:officer.nome,contingente:officer.origem},depois:{nome:payload.p_nome,contingente:payload.p_contingente}});
+        if (officer.origem !== payload.p_contingente) officer.destino='A definir';
+        officer.nome=payload.p_nome; officer.origem=payload.p_contingente;
+      }
       if (name === 'confirmar_exoneracao') officer.executed_at = '2026-10-16T15:00:00Z';
       if (name === 'reverter_exoneracao') { officer.executed_at = null; officer.status = 'Ativo'; }
       return { data: true, error: null };

@@ -23,6 +23,10 @@
     refreshTimer: null,
     historyShown: false,
     loading: false,
+    view: 'efetivo',
+    editing: null,
+    saving: false,
+    refreshPending: false,
   };
 
   // Reverter exoneração exige o nível 'admin' no banco (regra da função reverter_exoneracao).
@@ -32,6 +36,13 @@
   const situationOf = officer => (isExecuted(officer) ? 'Exonerado' : officer.status);
   const findOfficer = id => state.officers.find(o => o.id === id);
   const personName = email => state.names.get(email) || email || 'autor registrado';
+  const viewOfficers = () => state.officers.filter(o => isExecuted(o) === (state.view === 'exoneracoes'));
+  const shownOfficers = () => {
+    const term = $('search').value.trim().toLocaleLowerCase('pt-BR');
+    const filter = $('filter').value;
+    return viewOfficers().filter(o => o.nome.toLocaleLowerCase('pt-BR').includes(term)
+      && (state.view === 'exoneracoes' || filter === 'all' || o.status === filter));
+  };
 
   // ---------------------------------------------------------------------------
   // Renderização
@@ -47,14 +58,14 @@
     const { officers } = state;
     const count = situation => officers.filter(o => situationOf(o) === situation).length;
     const cards = [
-      ['TOTAL', officers.length],
+      ['EFETIVO ATUAL', officers.filter(o => !isExecuted(o)).length],
       ['ATIVOS', count('Ativo')],
       ['INATIVOS', count('Inativo')],
       ['A EXONERAR', count('Exonerar')],
       ['EXONERADOS', count('Exonerado')],
     ];
     const byJurisdiction = JURISDICTIONS
-      .map(j => `${esc(j)}: ${officers.filter(o => o.origem === j).length}`)
+      .map(j => `${esc(j)}: ${officers.filter(o => !isExecuted(o) && o.origem === j).length}`)
       .join(' · ');
 
     $('stats').innerHTML =
@@ -86,7 +97,7 @@
       : '<span class="small">Sem ação executada</span>';
     return `<tr data-id="${esc(officer.id)}">
       <td>${number}</td>
-      <td class="name">${name}</td>
+      <td class="name">${name}<button type="button" class="registry-edit no-print" data-edit="1" aria-label="Editar oficial ${name}">Editar oficial</button></td>
       <td><select aria-label="Situação de ${name}" class="status" data-field="status">${selectOptions(STATUSES, officer.status)}</select></td>
       <td><select aria-label="Destino de ${name}" class="dest" data-field="destino">${selectOptions(['A definir', ...JURISDICTIONS], officer.destino)}</select></td>
       <td><input aria-label="Observação de ${name}" class="notes" data-field="observacao" maxlength="400" value="${esc(officer.observacao)}" placeholder="Registre a avaliação…"></td>
@@ -94,14 +105,13 @@
     </tr>`;
   }
 
-  function renderSection(jurisdiction, term, filter) {
-    const all = state.officers.filter(o => o.origem === jurisdiction);
-    const shown = all.filter(o =>
-      o.nome.toLocaleLowerCase('pt-BR').includes(term)
-      && (filter === 'all' || situationOf(o) === filter));
+  function renderSection(jurisdiction) {
+    const all = viewOfficers().filter(o => o.origem === jurisdiction);
+    const shown = shownOfficers().filter(o => o.origem === jurisdiction);
+    if (!shown.length) return '';
     const subtitle = jurisdiction === 'Sem jurisdição'
       ? 'Efetivo sem atribuição territorial'
-      : 'Efetivo de jurisdição registrado';
+      : state.view === 'exoneracoes' ? 'Exonerações concluídas neste contingente' : 'Contingente atual do oficial';
     const rows = shown.length
       ? shown.map(o => {
           const number = all.indexOf(o) + 1;
@@ -123,9 +133,18 @@
 
   function render() {
     renderStats();
-    const term = $('search').value.trim().toLocaleLowerCase('pt-BR');
-    const filter = $('filter').value;
-    $('sections').innerHTML = JURISDICTIONS.map(j => renderSection(j, term, filter)).join('');
+    const archived = state.view === 'exoneracoes';
+    $('officersCount').textContent = state.officers.filter(o => !isExecuted(o)).length;
+    $('dismissedCount').textContent = state.officers.filter(isExecuted).length;
+    $('viewOfficers').setAttribute('aria-pressed', String(!archived));
+    $('viewDismissed').setAttribute('aria-pressed', String(archived));
+    $('registryViewTitle').textContent = archived ? 'Exonerações concluídas' : 'Efetivo atual';
+    $('registryViewHelp').textContent = archived
+      ? 'Oficiais já exonerados no jogo. Estes registros ficam fora do efetivo. O Alto Comando pode reverter uma exoneração com justificativa.'
+      : 'Oficiais vinculados à Cavalaria. Exonerações propostas continuam aqui até a confirmação da execução no jogo. Nome e contingente podem ser corrigidos em Editar oficial.';
+    $('filter').hidden = archived;
+    $('sections').innerHTML = JURISDICTIONS.map(renderSection).join('')
+      || `<p class="registry-empty">${archived ? 'Nenhuma exoneração encontrada nesta consulta.' : 'Nenhum oficial encontrado nesta consulta.'}</p>`;
   }
 
   function renderHistory(entries) {
@@ -184,7 +203,8 @@
   function scheduleRefresh() {
     clearTimeout(state.refreshTimer);
     state.refreshTimer = setTimeout(() => {
-      if (!document.activeElement?.matches('[data-field="observacao"]')) fetchOfficers();
+      if (state.editing || state.saving || document.activeElement?.matches('[data-field="observacao"]')) state.refreshPending = true;
+      else fetchOfficers();
     }, 350);
   }
 
@@ -199,27 +219,83 @@
       });
   }
 
-  async function updateOfficer(id, patch) {
-    const officer = findOfficer(id);
-    if (!officer || isExecuted(officer)) return;
-    const { data, error } = await db.from('cavalaria_oficiais')
-      .update(patch)
-      .eq('id', id)
-      .is('executed_at', null)
-      .select('id')
-      .maybeSingle();
-    if (error || !data) {
-      message('A alteração não foi salva: ' + (error?.message || 'registro foi atualizado por outra pessoa'), 'error');
-    } else {
+  async function updateOfficer(id, patch, snapshot = findOfficer(id)) {
+    if (!snapshot || isExecuted(snapshot) || state.saving) return false;
+    state.saving = true;
+    const controls = [...$('sections').querySelectorAll('input,select,button'), ...$('officerForm').querySelectorAll('input,select,button')];
+    controls.forEach(control => { control.disabled = true; });
+    try {
+      let result;
+      if ('nome' in patch || 'origem' in patch) {
+        result = await db.rpc('corrigir_oficial', { p_oficial:id, p_nome:patch.nome ?? snapshot.nome,
+          p_contingente:patch.origem ?? snapshot.origem, p_nome_anterior:snapshot.nome,
+          p_contingente_anterior:snapshot.origem, p_modificado_em:snapshot.modified_at || null });
+      } else {
+        let query = db.from('cavalaria_oficiais').update(patch).eq('id', id).is('executed_at', null)
+          .eq('nome', snapshot.nome).eq('origem', snapshot.origem);
+        if (snapshot.modified_at) query = query.eq('modified_at', snapshot.modified_at);
+        result = await query.select('id').maybeSingle();
+      }
+      const { data, error } = result;
+      if (error || !data) throw new Error(error?.message || 'O registro mudou desde a abertura. Feche a edição, confira os dados atualizados e tente novamente.');
       message('Alteração registrada no banco de dados.', 'success');
+      await fetchOfficers();
+      return true;
+    } catch (error) {
+      const text = 'A alteração não foi salva: ' + error.message;
+      if (state.editing) { $('officerEditorError').textContent = text; setHidden('officerEditorError', false); }
+      else { message(text, 'error'); await fetchOfficers(); }
+      return false;
+    } finally {
+      state.saving = false;
+      controls.forEach(control => { control.disabled = false; });
     }
-    await fetchOfficers();
   }
+
+  function openEditor(officer) {
+    if (isExecuted(officer) || state.saving) return;
+    state.editing = { ...officer };
+    $('officerName').value = officer.nome;
+    $('officerJurisdiction').innerHTML = selectOptions(JURISDICTIONS, officer.origem);
+    $('officerEditorContext').textContent = `${officer.nome} · ${officer.origem}`;
+    setHidden('officerEditorError', true);
+    $('officerEditor').showModal();
+    document.body.classList.add('registry-editor-open');
+    $('officerName').focus();
+  }
+  function closeEditor() { if (!state.saving) $('officerEditor').close(); }
+  $('officerForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const original = state.editing;
+    if (!original || state.saving) return;
+    const name = $('officerName').value.trim().replace(/\s+/g, ' ');
+    const jurisdiction = $('officerJurisdiction').value;
+    if (name.length < 2 || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name) || !JURISDICTIONS.includes(jurisdiction)) {
+      $('officerEditorError').textContent = 'Informe um nome de 2 a 120 caracteres e um contingente válido.'; setHidden('officerEditorError', false); return;
+    }
+    const patch = {};
+    if (name !== original.nome) patch.nome = name;
+    if (jurisdiction !== original.origem) { patch.origem = jurisdiction; patch.destino = 'A definir'; }
+    if (!Object.keys(patch).length) { closeEditor(); return; }
+    if (await updateOfficer(original.id, patch, original)) {
+      closeEditor();
+      message(`${name}: ${patch.origem ? 'transferência para ' + jurisdiction + ' e dados registrados' : 'nome atualizado'}.`, 'success');
+    }
+  });
+  $('closeOfficerEditor').onclick = closeEditor;
+  $('cancelOfficerEdit').onclick = closeEditor;
+  $('officerEditor').addEventListener('cancel', event => { if (state.saving) event.preventDefault(); });
+  $('officerEditor').addEventListener('close', () => {
+    const id = state.editing?.id;
+    state.editing = null; document.body.classList.remove('registry-editor-open');
+    [...$('sections').querySelectorAll('tr[data-id]')].find(row => row.dataset.id === id)?.querySelector('[data-edit]')?.focus();
+    if (state.refreshPending) { state.refreshPending = false; fetchOfficers(); }
+  });
 
   async function confirmExoneration(officer, button) {
     if (officer.status !== 'Exonerar' || isExecuted(officer)) return;
     const ok = confirm(`Você CONFIRMA que ${officer.nome} já foi EXONERADO dentro do jogo?\n\n`
-      + 'O registro receberá carimbo EXONERADO, ficará bloqueado e será preservado no histórico.');
+      + 'O oficial sairá do efetivo e ficará na aba Exonerações, com o histórico preservado.');
     if (!ok) return;
 
     button.disabled = true;
@@ -264,22 +340,26 @@
     const columns = [
       ['origem', o => o.origem],
       ['nome', o => o.nome],
-      ['status', o => o.status],
+      ['status', situationOf],
       ['destino', o => o.destino],
       ['observacao', o => o.observacao],
       ['executed_at', o => o.executed_at],
       ['executed_by', o => (o.executed_by_email ? personName(o.executed_by_email) : '')],
       ['executed_by_email', o => o.executed_by_email],
     ];
-    const quote = value => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+    const quote = value => {
+      let text = String(value ?? '');
+      if (/^[\s]*[=+\-@]/.test(text) || /^[\t\r\n]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
     const lines = [
       columns.map(([title]) => title).join(';'),
-      ...state.officers.map(o => columns.map(([, get]) => quote(get(o))).join(';')),
+      ...shownOfficers().map(o => columns.map(([, get]) => quote(get(o))).join(';')),
     ];
     const url = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'cavalaria_oeste_registro.csv';
+    link.download = `cavalaria_oeste_${state.view}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -292,6 +372,9 @@
 
   $('search').addEventListener('input', render);
   $('filter').addEventListener('change', render);
+  function selectView(view) { state.view = view; $('search').value = ''; $('filter').value = 'all'; render(); }
+  $('viewOfficers').onclick = () => selectView('efetivo');
+  $('viewDismissed').onclick = () => selectView('exoneracoes');
   $('csv').onclick = exportCsv;
   $('print').onclick = () => window.print();
   $('historyToggle').onclick = async () => {
@@ -315,14 +398,16 @@
     if (officer && e.target.value !== officer.observacao) {
       await updateOfficer(row.dataset.id, { observacao: e.target.value });
     }
+    if (state.refreshPending && !state.editing && !state.saving) { state.refreshPending = false; fetchOfficers(); }
   });
 
   $('sections').addEventListener('click', async e => {
-    const button = e.target.closest('[data-execute], [data-revert]');
+    const button = e.target.closest('[data-execute], [data-revert], [data-edit]');
     if (!button) return;
     const officer = findOfficer(button.closest('tr[data-id]').dataset.id);
     if (!officer) return;
-    if (button.dataset.execute) await confirmExoneration(officer, button);
+    if (button.dataset.edit) openEditor(officer);
+    else if (button.dataset.execute) await confirmExoneration(officer, button);
     else await revertExoneration(officer, button);
   });
 
