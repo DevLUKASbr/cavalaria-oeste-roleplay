@@ -86,14 +86,14 @@ test('erros isolados na auditoria não escondem os indicadores disponíveis', as
 test('Registros preserva busca, filtro, edição, destino e observações', async ({ page }) => {
   await prepare(page);
   await page.goto('/painel.html');
-  await expect(page.locator('tr[data-id]')).toHaveCount(5);
+  await expect(page.locator('tr[data-id]')).toHaveCount(4);
   await page.locator('#search').fill('Arthur');
   await expect(page.locator('tr[data-id]')).toHaveCount(1);
   await page.locator('#search').fill('');
-  await page.locator('#filter').selectOption('Exonerado');
+  await page.locator('#viewDismissed').click();
   await expect(page.locator('tr[data-id]')).toHaveCount(1);
   await expect(page.locator('tr[data-id="c"]')).toContainText('EXONERADO');
-  await page.locator('#filter').selectOption('all');
+  await page.locator('#viewOfficers').click();
   await page.locator('tr[data-id="a"] [data-field="status"]').selectOption('Inativo');
   await expect(page.locator('#message')).toContainText('Alteração registrada');
   await page.locator('tr[data-id="a"] [data-field="destino"]').selectOption('West Elizabeth');
@@ -106,13 +106,17 @@ test('Registros preserva busca, filtro, edição, destino e observações', asyn
 test('exoneração, reversão justificada, auditoria, CSV e impressão permanecem funcionais', async ({ page }) => {
   await prepare(page);
   await page.goto('/painel.html');
-  await expect(page.locator('tr[data-id]')).toHaveCount(5);
+  await expect(page.locator('tr[data-id]')).toHaveCount(4);
   page.once('dialog', dialog => dialog.accept());
   await page.locator('tr[data-id="b"] [data-execute]').click();
+  await expect(page.locator('tr[data-id="b"]')).toHaveCount(0);
+  await page.locator('#viewDismissed').click();
   await expect(page.locator('tr[data-id="b"]')).toHaveClass('executed');
   const acceptReversal = dialog => dialog.type() === 'prompt' ? dialog.accept('Justificativa de teste válida') : dialog.accept();
   page.on('dialog', acceptReversal);
   await page.locator('tr[data-id="c"] [data-revert]').click();
+  await expect(page.locator('tr[data-id="c"]')).toHaveCount(0);
+  await page.locator('#viewOfficers').click();
   await expect(page.locator('tr[data-id="c"] [data-field="status"]')).toHaveValue('Ativo');
   page.off('dialog', acceptReversal);
   const calls = await page.evaluate(() => window.__mock.calls.filter(call => call.rpc));
@@ -122,9 +126,10 @@ test('exoneração, reversão justificada, auditoria, CSV e impressão permanece
   const download = page.waitForEvent('download');
   await page.locator('#csv').click();
   const csvDownload = await download;
-  expect(csvDownload.suggestedFilename()).toBe('cavalaria_oeste_registro.csv');
+  expect(csvDownload.suggestedFilename()).toBe('cavalaria_oeste_efetivo.csv');
   const csv = readFileSync(await csvDownload.path(), 'utf8');
-  for (const name of ['Arthur Teste', 'Bonnie Teste', 'Charles Teste', 'Diana Teste', 'Elias Teste']) expect(csv).toContain(name);
+  expect(csv).not.toContain('Bonnie Teste');
+  for (const name of ['Arthur Teste', 'Charles Teste', 'Diana Teste', 'Elias Teste']) expect(csv).toContain(name);
   await page.evaluate(() => { window.print = () => { window.__printed = true; }; });
   await page.locator('#print').click();
   expect(await page.evaluate(() => window.__printed)).toBe(true);
@@ -137,6 +142,7 @@ test('exoneração, reversão justificada, auditoria, CSV e impressão permanece
 test('nível limitado não recebe reversão administrativa', async ({ page }) => {
   await prepare(page, { cargo: '', role: 'xerife' });
   await page.goto('/painel.html');
+  await page.locator('#viewDismissed').click();
   await expect(page.locator('tr[data-id="c"]')).toContainText('EXONERADO');
   await expect(page.locator('[data-revert]')).toHaveCount(0);
 });
@@ -182,7 +188,7 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 390, height: 844 }
       await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
     }
     await page.getByRole('link', { name: 'Registros', exact: true }).click();
-    await expect(page.locator('tr[data-id]')).toHaveCount(5);
+    await expect(page.locator('tr[data-id]')).toHaveCount(4);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.locator('.tablewrap').first().evaluate(node => node.scrollWidth >= node.clientWidth)).toBe(true);
     for (const route of ['contas.html', 'treinamentos.html', 'recrutamento.html', 'avisos.html']) {
